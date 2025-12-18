@@ -33,6 +33,7 @@ export const translations = {
       resources: "Resources",
       recipes: "Recipes",
       allMachines: "All Machines",
+      allCategories: "All Categories",
     },
     panel: {
       producedBy: "Produced By",

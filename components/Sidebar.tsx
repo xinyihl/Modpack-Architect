@@ -21,11 +21,13 @@ const Sidebar: React.FC<SidebarProps> = ({ onDefineRecipe, onEditRecipe, onOpenS
 
   const filtered = useMemo(() => {
     return recipes.filter(r => {
-      const matchesSearch = r.name.toLowerCase().includes(search.toLowerCase());
+      const matchesSearch = (r.name || '').toLowerCase().includes(search.toLowerCase());
       const matchesMachine = machineFilter === 'all' || r.machineId === machineFilter;
       return matchesSearch && matchesMachine;
     });
   }, [recipes, search, machineFilter]);
+
+  const safeUpperCase = (val: any) => (val ? String(val).toUpperCase() : '');
 
   return (
     <div className="flex flex-col border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 w-80 shrink-0 h-full transition-colors duration-300">
@@ -81,8 +83,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onDefineRecipe, onEditRecipe, onOpenS
               onChange={(e) => setMachineFilter(e.target.value)}
               className="flex-1 bg-zinc-100 dark:bg-zinc-800 border-none rounded py-1 px-3 text-[10px] font-bold uppercase text-zinc-500 dark:text-zinc-400 focus:ring-1 focus:ring-blue-500 outline-none h-7 tracking-tighter"
             >
-              <option value="all">{t('sidebar.allMachines').toUpperCase()}</option>
-              {machines.map(m => <option key={m.id} value={m.id}>{m.name.toUpperCase()}</option>)}
+              <option value="all">{safeUpperCase(t('sidebar.allMachines'))}</option>
+              {machines.map(m => <option key={m.id} value={m.id}>{safeUpperCase(m.name)}</option>)}
             </select>
          </div>
       </div>
