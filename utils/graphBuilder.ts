@@ -1,14 +1,15 @@
+
 import dagre from 'dagre';
-import { Node, Edge, Position } from 'reactflow';
+import { Node, Edge, Position, MarkerType } from 'reactflow';
 import { Recipe, Resource } from '../types';
 
-const NODE_SIZE = 50;
+const NODE_SIZE = 80;
 
 export const buildGraph = (resources: Resource[], recipes: Recipe[]) => {
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-  dagreGraph.setGraph({ rankdir: 'LR', nodesep: 50, ranksep: 100 }); // Left to Right layout
+  dagreGraph.setGraph({ rankdir: 'LR', nodesep: 120, ranksep: 200 });
 
   const nodes: Node[] = [];
   const edges: Edge[] = [];
@@ -32,9 +33,17 @@ export const buildGraph = (resources: Resource[], recipes: Recipe[]) => {
           source: input.resourceId,
           target: output.resourceId,
           label: recipe.name,
-          animated: false,
-          style: { stroke: '#52525b' },
-          labelStyle: { fill: '#a1a1aa', fontSize: 10 },
+          animated: true,
+          style: { stroke: '#71717a', strokeWidth: 2 },
+          labelStyle: { fill: '#18181b', fontSize: 11, fontWeight: 700 },
+          labelBgStyle: { fill: '#fff', fillOpacity: 0.9, rx: 4 },
+          labelBgPadding: [8, 4],
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            width: 20,
+            height: 20,
+            color: '#71717a',
+          },
         });
 
         createdNodeIds.add(input.resourceId);
@@ -75,17 +84,19 @@ export const buildGraph = (resources: Resource[], recipes: Recipe[]) => {
         style: {
           background: '#18181b',
           color: '#fff',
-          border: `2px solid ${borderColor}`,
-          borderRadius: '8px',
+          border: `4px solid ${borderColor}`,
+          borderRadius: '16px',
           width: NODE_SIZE,
           height: NODE_SIZE,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           textAlign: 'center',
-          fontSize: '11px',
-          fontWeight: 600,
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)',
+          fontSize: '16px',
+          lineHeight: '1.1',
+          padding: '8px',
+          fontWeight: 900,
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4)',
         },
       });
     }
