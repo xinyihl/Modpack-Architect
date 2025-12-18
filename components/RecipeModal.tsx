@@ -63,37 +63,56 @@ const RecipeModal: React.FC<RecipeModalProps> = ({ resources, machines, editingR
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm transition-opacity" onClick={onClose} />
-      <div className="relative w-full max-w-4xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-md transition-opacity" onClick={onClose} />
+      <div className="relative w-full max-w-4xl bg-zinc-900 border border-zinc-800 rounded-[2rem] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between px-8 py-6 border-b border-zinc-800">
           <div>
-            <h2 className="text-xl font-bold text-zinc-900 dark:text-white">
-              {editingRecipe ? t('modal.editRecipe') : t('modal.newRecipe')}
-            </h2>
-            <div className="flex items-center gap-2 mt-1">
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-tighter ${step === 'select-machine' ? 'bg-blue-600 text-white' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'}`}>
+            <div className="flex items-center gap-3 mb-1.5">
+              <div className="bg-blue-600/10 p-2 rounded-lg">
+                <Cpu size={18} className="text-blue-500" />
+              </div>
+              <h2 className="text-xl font-black text-white uppercase tracking-widest">
+                {editingRecipe ? t('modal.editRecipe') : t('modal.newRecipe')}
+              </h2>
+            </div>
+            <div className="flex items-center gap-3 ml-0.5">
+              <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${step === 'select-machine' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-zinc-800/50 text-zinc-500'}`}>
                 {t('modal.stepMachine')}
-              </span>
-              <ChevronRight size={12} className="text-zinc-300 dark:text-zinc-700" />
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-tighter ${step === 'config' ? 'bg-blue-600 text-white' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'}`}>
+              </div>
+              <ChevronRight size={14} className="text-zinc-700" />
+              <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${step === 'config' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-zinc-800/50 text-zinc-500'}`}>
                 {t('modal.stepConfig')}
-              </span>
+              </div>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"><X size={20} /></button>
+          <button onClick={onClose} className="p-3 text-zinc-600 hover:text-white hover:bg-zinc-800 rounded-2xl transition-all"><X size={24} /></button>
         </div>
-        <div className="flex-1 p-6 overflow-y-auto">
+        <div className="flex-1 p-8 overflow-y-auto custom-scrollbar bg-[#0c0c0e]/30">
           {step === 'select-machine' && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <div className="text-center space-y-2"><h3 className="text-zinc-500 dark:text-zinc-400 font-medium italic text-sm">{t('modal.selectMachinePrompt')}</h3></div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-400">
+              <div className="text-center space-y-2">
+                <h3 className="text-zinc-500 font-bold uppercase text-xs tracking-[0.2em]">{t('modal.selectMachinePrompt')}</h3>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
                 {machines.map((machine) => (
-                  <button key={machine.id} onClick={() => handleSelectMachine(machine.id)} className={`flex items-start text-left gap-4 p-4 rounded-xl border transition-all group ${selectedMachineId === machine.id ? 'bg-blue-50 dark:bg-blue-600/10 border-blue-500 shadow-lg shadow-blue-500/10' : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/20 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 hover:border-zinc-300 dark:hover:border-zinc-700'}`}>
-                    <div className={`p-3 rounded-lg transition-colors ${selectedMachineId === machine.id ? 'bg-blue-600 text-white' : 'bg-zinc-200 dark:bg-zinc-800 group-hover:bg-blue-500/20 group-hover:text-blue-600 dark:group-hover:text-blue-400'}`}><Cpu size={24} /></div>
+                  <button 
+                    key={machine.id} 
+                    onClick={() => handleSelectMachine(machine.id)} 
+                    className={`flex items-start text-left gap-6 p-6 rounded-2xl border transition-all group relative overflow-hidden ${
+                      selectedMachineId === machine.id 
+                        ? 'bg-blue-600/10 border-blue-500 shadow-2xl shadow-blue-600/10' 
+                        : 'border-zinc-800 bg-zinc-900 hover:bg-zinc-800/50 hover:border-zinc-700'
+                    }`}
+                  >
+                    <div className={`p-4 rounded-xl transition-all duration-300 ${
+                      selectedMachineId === machine.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-zinc-800 text-zinc-500 group-hover:text-blue-400'
+                    }`}>
+                      <Cpu size={28} />
+                    </div>
                     <div>
-                      <h4 className={`font-bold transition-colors ${selectedMachineId === machine.id ? 'text-blue-700 dark:text-white' : 'text-zinc-700 dark:text-zinc-200 group-hover:text-zinc-900 dark:group-hover:text-white'}`}>{machine.name}</h4>
-                      <p className="text-xs text-zinc-500 line-clamp-2 mt-1 leading-relaxed">{machine.description}</p>
+                      <h4 className={`text-base font-black uppercase tracking-wide transition-colors ${selectedMachineId === machine.id ? 'text-white' : 'text-zinc-300 group-hover:text-white'}`}>{machine.name}</h4>
+                      <p className="text-xs text-zinc-500 font-medium line-clamp-2 mt-1.5 leading-relaxed">{machine.description}</p>
                     </div>
                   </button>
                 ))}
@@ -101,7 +120,7 @@ const RecipeModal: React.FC<RecipeModalProps> = ({ resources, machines, editingR
             </div>
           )}
           {step === 'config' && selectedMachine && (
-            <div className="animate-in fade-in slide-in-from-right-2 duration-300">
+            <div className="animate-in fade-in slide-in-from-right-4 duration-400">
               <RecipeForm resources={resources} machine={selectedMachine} initialRecipe={editingRecipe} onSave={handleSave} onCancel={handleReset} onDelete={handleDelete} />
             </div>
           )}
