@@ -65,7 +65,7 @@ const RecipeModal: React.FC<RecipeModalProps> = ({ resources, machines, editingR
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm transition-opacity" onClick={onClose} />
-      <div className="relative w-full max-w-4xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+      <div className="relative w-full max-w-4xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800">
           <div>
             <h2 className="text-xl font-bold text-zinc-900 dark:text-white">
@@ -83,7 +83,7 @@ const RecipeModal: React.FC<RecipeModalProps> = ({ resources, machines, editingR
           </div>
           <button onClick={onClose} className="p-2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"><X size={20} /></button>
         </div>
-        <div className="flex-1 p-6 overflow-y-auto">
+        <div className="flex-1 p-6">
           {step === 'select-machine' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="text-center space-y-2"><h3 className="text-zinc-500 dark:text-zinc-400 font-medium italic text-sm">{t('modal.selectMachinePrompt')}</h3></div>
