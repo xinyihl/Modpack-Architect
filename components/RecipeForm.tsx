@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Save, AlertCircle, Search, X, Trash2 } from 'lucide-react';
 import { Recipe, Resource, ResourceStack, MachineDefinition, MachineSlot } from '../types';
 import { useI18n } from '../App';
+import { useNotifications } from '../context/NotificationContext';
 
 interface RecipeFormProps {
   resources: Resource[];
@@ -15,6 +16,7 @@ interface RecipeFormProps {
 
 const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialRecipe, onSave, onCancel, onDelete }) => {
   const { t } = useI18n();
+  const { showNotification } = useNotifications();
   const [name, setName] = useState('');
   const [duration, setDuration] = useState<number>(100);
   
@@ -72,9 +74,11 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
     e.preventDefault();
     if (!name) return;
 
-    const allFilled = [...inputs, ...outputs].every(stack => stack.resourceId !== '');
-    if (!allFilled) {
-      alert('Please select a resource for all required slots.');
+    const allInputsFilled = machine.inputs.every((slot, idx) => slot.optional || inputs[idx].resourceId !== '');
+    const allOutputsFilled = machine.outputs.every((slot, idx) => slot.optional || outputs[idx].resourceId !== '');
+
+    if (!allInputsFilled || !allOutputsFilled) {
+      showNotification('error', '验证失败', '请为所有非可选槽位选择资源。');
       return;
     }
 
@@ -88,6 +92,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
     };
 
     onSave(recipe);
+    showNotification('success', '保存成功', `配方 "${name}" 已保存。`);
   };
 
   const updateStack = (index: number, field: string, value: any, setter: React.Dispatch<React.SetStateAction<any[]>>) => {
@@ -139,7 +144,9 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
           return (
             <div key={idx} className="space-y-1.5 relative">
               <div className="flex justify-between items-center px-0.5">
-                 <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-semibold">{slot.label} ({slot.type})</span>
+                 <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-semibold">
+                   {slot.label} ({slot.type}) {slot.optional && <span className="text-zinc-500 dark:text-zinc-600 ml-1 opacity-60">可选</span>}
+                 </span>
               </div>
               <div className={`flex items-center gap-2 p-2 bg-zinc-50 dark:bg-zinc-900/40 rounded border transition-all ${
                 activeSlot?.type === type && activeSlot?.index === idx 

@@ -23,6 +23,7 @@ export interface ResourceStack {
 export interface MachineSlot {
   type: ResourceType;
   label: string;
+  optional?: boolean;
 }
 
 export interface MachineDefinition {

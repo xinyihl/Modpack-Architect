@@ -4,6 +4,7 @@ import { Plus, Trash2, Edit2, Box, Droplets, Zap, Wind, Star, Tag, Cpu, X, Setti
 import { Resource, ResourceCategory, ResourceType, MachineDefinition, MachineSlot, Recipe } from '../types';
 import { useI18n } from '../App';
 import { useModpack } from '../context/ModpackContext';
+import { useNotifications } from '../context/NotificationContext';
 
 interface ResourceLibraryProps {
   resources: Resource[];
@@ -28,6 +29,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
 }) => {
   const { t } = useI18n();
   const { recipes } = useModpack();
+  const { showNotification } = useNotifications();
   const [activeTab, setActiveTab] = useState<'resources' | 'categories' | 'machines'>('resources');
 
   const [resSearch, setResSearch] = useState('');
@@ -60,12 +62,13 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
     );
 
     if (dependentRecipe) {
-      alert(`无法删除资源 "${res?.name}"：它正在被配方 "${dependentRecipe.name}" 使用。`);
+      showNotification('error', '无法删除资源', `资源 "${res?.name}" 正在被配方 "${dependentRecipe.name}" 使用。`);
       return;
     }
 
     if (confirm(t('common.confirmDelete'))) {
       onDeleteResource(id);
+      showNotification('success', '删除成功', `资源 "${res?.name}" 已从库中移除。`);
     }
   };
 
@@ -74,12 +77,13 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
     const dependentResource = resources.find(r => r.type === id);
 
     if (dependentResource) {
-      alert(`无法删除分类 "${cat?.name}"：资源 "${dependentResource.name}" 属于该分类。`);
+      showNotification('error', '无法删除分类', `资源 "${dependentResource.name}" 属于分类 "${cat?.name}"。`);
       return;
     }
 
     if (confirm(t('common.confirmDelete'))) {
       onDeleteCategory(id);
+      showNotification('success', '删除成功', `分类 "${cat?.name}" 已移除。`);
     }
   };
 
@@ -88,12 +92,13 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
     const dependentRecipe = recipes.find(r => r.machineId === id);
 
     if (dependentRecipe) {
-      alert(`无法删除机器 "${machine?.name}"：配方 "${dependentRecipe.name}" 正在使用它。`);
+      showNotification('error', '无法删除机器', `机器 "${machine?.name}" 正在被配方 "${dependentRecipe.name}" 使用。`);
       return;
     }
 
     if (confirm(t('common.confirmDelete'))) {
       onDeleteMachine(id);
+      showNotification('success', '删除成功', `机器 "${machine?.name}" 已移除。`);
     }
   };
 
@@ -131,6 +136,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
     if (editingResourceId) onUpdateResource(res);
     else onAddResource(res);
     cancelEditResource();
+    showNotification('success', '资源已保存', `"${res.name}" 已同步。`);
   };
 
   const handleSubmitCategory = (e: React.FormEvent) => {
@@ -140,6 +146,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
     if (editingCategoryId) onUpdateCategory(cat);
     else onAddCategory(cat);
     cancelEditCategory();
+    showNotification('success', '分类已保存', `"${cat.name}" 已同步。`);
   };
 
   const handleSubmitMachine = (e: React.FormEvent) => {
@@ -149,10 +156,11 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
     if (editingMachineId) onUpdateMachine(mac);
     else onAddMachine(mac);
     cancelEditMachine();
+    showNotification('success', '机器已保存', `"${mac.name}" 已同步。`);
   };
 
   const addSlot = (type: 'input' | 'output') => {
-    const newSlot: MachineSlot = { type: categories[0]?.id || 'item', label: 'New Slot' };
+    const newSlot: MachineSlot = { type: categories[0]?.id || 'item', label: 'New Slot', optional: false };
     if (type === 'input') setMacInputs([...macInputs, newSlot]);
     else setMacOutputs([...macOutputs, newSlot]);
   };
@@ -355,37 +363,45 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
               <textarea value={macDesc} onChange={(e) => setMacDesc(e.target.value)} rows={2} className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded px-3 py-1.5 text-sm text-zinc-700 dark:text-zinc-300 outline-none focus:ring-1 focus:ring-blue-500 resize-none shadow-inner" placeholder="Machine purpose..." />
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <div className="flex justify-between items-center"><label className="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold ml-1">{t('form.inputs')}</label><button type="button" onClick={() => addSlot('input')} className="text-blue-600 dark:text-blue-500 hover:text-blue-500 dark:hover:text-blue-400 text-[10px] font-bold uppercase tracking-tight">{t('form.addSlot')}</button></div>
-                <div className="space-y-1">
+            <div className="grid grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center"><label className="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold ml-1">输入项</label><button type="button" onClick={() => addSlot('input')} className="text-blue-600 dark:text-blue-500 hover:text-blue-500 dark:hover:text-blue-400 text-[10px] font-bold uppercase tracking-tight">+ 添加槽位</button></div>
+                <div className="space-y-2">
                   {macInputs.map((s, i) => (
-                    <div key={i} className="flex gap-1 items-center">
-                      <select value={s.type} onChange={(e) => setMacInputs(macInputs.map((x, idx) => idx === i ? {...x, type: e.target.value} : x))} className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded px-1 py-1 text-[10px] text-zinc-600 dark:text-zinc-400">
+                    <div key={i} className="flex gap-2 items-center p-2 bg-zinc-50 dark:bg-zinc-900/40 rounded border border-zinc-100 dark:border-zinc-800">
+                      <select value={s.type} onChange={(e) => setMacInputs(macInputs.map((x, idx) => idx === i ? {...x, type: e.target.value} : x))} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded px-1 py-1 text-[10px] text-zinc-600 dark:text-zinc-400 w-24 outline-none">
                         {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                       </select>
-                      <input type="text" value={s.label} onChange={(e) => setMacInputs(macInputs.map((x, idx) => idx === i ? {...x, label: e.target.value} : x))} className="flex-1 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 text-[10px] text-zinc-700 dark:text-zinc-300" />
-                      <button type="button" onClick={() => setMacInputs(macInputs.filter((_, idx) => idx !== i))} className="text-zinc-400 hover:text-red-600"><Trash2 size={12}/></button>
+                      <input type="text" value={s.label} onChange={(e) => setMacInputs(macInputs.map((x, idx) => idx === i ? {...x, label: e.target.value} : x))} className="flex-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 text-[10px] text-zinc-700 dark:text-zinc-300 outline-none" placeholder="槽位标签" />
+                      <div className="flex items-center gap-1.5 px-1">
+                        <input type="checkbox" id={`opt-in-${i}`} checked={s.optional} onChange={(e) => setMacInputs(macInputs.map((x, idx) => idx === i ? {...x, optional: e.target.checked} : x))} className="w-3 h-3 rounded" />
+                        <label htmlFor={`opt-in-${i}`} className="text-[9px] font-bold text-zinc-500 uppercase cursor-pointer">可选</label>
+                      </div>
+                      <button type="button" onClick={() => setMacInputs(macInputs.filter((_, idx) => idx !== i))} className="text-zinc-400 hover:text-red-600 transition-colors"><Trash2 size={12}/></button>
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center"><label className="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold ml-1">{t('form.outputs')}</label><button type="button" onClick={() => addSlot('output')} className="text-orange-600 dark:text-orange-500 hover:text-orange-500 dark:hover:text-orange-400 text-[10px] font-bold uppercase tracking-tight">{t('form.addSlot')}</button></div>
-                <div className="space-y-1">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center"><label className="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold ml-1">输出项</label><button type="button" onClick={() => addSlot('output')} className="text-orange-600 dark:text-orange-500 hover:text-orange-500 dark:hover:text-orange-400 text-[10px] font-bold uppercase tracking-tight">+ 添加槽位</button></div>
+                <div className="space-y-2">
                   {macOutputs.map((s, i) => (
-                    <div key={i} className="flex gap-1 items-center">
-                      <select value={s.type} onChange={(e) => setMacOutputs(macOutputs.map((x, idx) => idx === i ? {...x, type: e.target.value} : x))} className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded px-1 py-1 text-[10px] text-zinc-600 dark:text-zinc-400">
+                    <div key={i} className="flex gap-2 items-center p-2 bg-zinc-50 dark:bg-zinc-900/40 rounded border border-zinc-100 dark:border-zinc-800">
+                      <select value={s.type} onChange={(e) => setMacOutputs(macOutputs.map((x, idx) => idx === i ? {...x, type: e.target.value} : x))} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded px-1 py-1 text-[10px] text-zinc-600 dark:text-zinc-400 w-24 outline-none">
                         {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                       </select>
-                      <input type="text" value={s.label} onChange={(e) => setMacOutputs(macOutputs.map((x, idx) => idx === i ? {...x, label: e.target.value} : x))} className="flex-1 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 text-[10px] text-zinc-700 dark:text-zinc-300" />
-                      <button type="button" onClick={() => setMacOutputs(macOutputs.filter((_, idx) => idx !== i))} className="text-zinc-400 hover:text-red-600"><Trash2 size={12}/></button>
+                      <input type="text" value={s.label} onChange={(e) => setMacOutputs(macOutputs.map((x, idx) => idx === i ? {...x, label: e.target.value} : x))} className="flex-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 text-[10px] text-zinc-700 dark:text-zinc-300 outline-none" placeholder="槽位标签" />
+                      <div className="flex items-center gap-1.5 px-1">
+                        <input type="checkbox" id={`opt-out-${i}`} checked={s.optional} onChange={(e) => setMacOutputs(macOutputs.map((x, idx) => idx === i ? {...x, optional: e.target.checked} : x))} className="w-3 h-3 rounded" />
+                        <label htmlFor={`opt-out-${i}`} className="text-[9px] font-bold text-zinc-500 uppercase cursor-pointer">可选</label>
+                      </div>
+                      <button type="button" onClick={() => setMacOutputs(macOutputs.filter((_, idx) => idx !== i))} className="text-zinc-400 hover:text-red-600 transition-colors"><Trash2 size={12}/></button>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white px-6 py-1.5 rounded font-bold text-sm transition-colors shadow-md">
+            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg font-bold text-sm transition-colors shadow-md active:scale-[0.99]">
               {editingMachineId ? t('common.update') : t('common.create')}
             </button>
           </form>

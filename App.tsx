@@ -3,6 +3,7 @@ import React, { useState, useMemo, useEffect, createContext, useContext } from '
 import ReactFlow, { Controls, Background, useNodesState, useEdgesState, BackgroundVariant } from 'reactflow';
 import { ModpackProvider, useModpack } from './context/ModpackContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { NotificationProvider, useNotifications } from './context/NotificationContext';
 import { buildGraph } from './utils/graphBuilder';
 import { translations, Locale } from './translations';
 
@@ -29,6 +30,7 @@ function MainLayout() {
   const { resources, recipes, categories, machines, setCategories, setResources, setRecipes, setMachines, addRecipe, deleteRecipe, addResource, updateResource, deleteResource, addCategory, updateCategory, deleteCategory, addMachine, updateMachine, deleteMachine } = useModpack();
   const { t } = useI18n();
   const { theme } = useTheme();
+  const { showNotification } = useNotifications();
   
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -52,25 +54,28 @@ function MainLayout() {
     const recipeToDelete = recipes.find(r => r.id === id);
     if (!recipeToDelete) return;
 
-    // Check if any other recipe uses the outputs of this recipe as their inputs
     const outputs = recipeToDelete.outputs.map(o => o.resourceId);
     const dependentRecipe = recipes.find(r => 
       r.id !== id && r.inputs.some(i => outputs.includes(i.resourceId))
     );
 
     if (dependentRecipe) {
-      // Find if there are other recipes producing these outputs
       const otherProducers = recipes.filter(r => 
         r.id !== id && r.outputs.some(o => outputs.includes(o.resourceId))
       );
 
       if (otherProducers.length === 0) {
-        alert(`无法删除配方 "${recipeToDelete.name}"：它是资源 "${resources.find(res => outputs.includes(res.id))?.name}" 的唯一产出途径，而该资源正被配方 "${dependentRecipe.name}" 使用。`);
+        showNotification(
+          'error',
+          '无法删除配方',
+          `配方 "${recipeToDelete.name}" 是资源 "${resources.find(res => outputs.includes(res.id))?.name}" 的唯一产出途径，而该资源正被配方 "${dependentRecipe.name}" 使用。`
+        );
         return;
       }
     }
 
     deleteRecipe(id);
+    showNotification('success', '删除成功', `配方 "${recipeToDelete.name}" 已移除。`);
   };
 
   const handleExport = () => {
@@ -82,6 +87,7 @@ function MainLayout() {
     link.download = `modpack_architect_backup_${new Date().toISOString().split('T')[0]}.json`;
     link.click();
     URL.revokeObjectURL(url);
+    showNotification('success', '导出成功', '您的数据已保存。');
   };
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,7 +101,10 @@ function MainLayout() {
         if (data.resources) setResources(data.resources);
         if (data.recipes) setRecipes(data.recipes);
         if (data.machines) setMachines(data.machines);
-      } catch (err) { alert('Invalid file'); }
+        showNotification('success', '导入成功', '数据已成功同步。');
+      } catch (err) { 
+        showNotification('error', '导入失败', '所选文件格式不正确或已损坏。');
+      }
     };
     reader.readAsText(file);
   };
@@ -194,11 +203,13 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      <ModpackProvider>
-        <I18nContext.Provider value={{ locale, setLocale, t }}>
-          <MainLayout />
-        </I18nContext.Provider>
-      </ModpackProvider>
+      <NotificationProvider>
+        <ModpackProvider>
+          <I18nContext.Provider value={{ locale, setLocale, t }}>
+            <MainLayout />
+          </I18nContext.Provider>
+        </ModpackProvider>
+      </NotificationProvider>
     </ThemeProvider>
   );
 }
