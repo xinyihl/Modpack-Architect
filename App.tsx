@@ -7,7 +7,7 @@ import ReactFlow, {
   useEdgesState, 
   BackgroundVariant
 } from 'reactflow';
-import { Layers, Plus, Database, Settings, Search, Cpu, X, Languages, Download, Upload } from 'lucide-react';
+import { Layers, Plus, Database, Settings, Search, Cpu, X, Languages, Download, Upload, ArrowRight } from 'lucide-react';
 
 import { Resource, Recipe, ResourceCategory, MachineDefinition } from './types';
 import { buildGraph } from './utils/graphBuilder';
@@ -182,6 +182,7 @@ export default function App() {
 
   const editingRecipe = useMemo(() => recipes.find(r => r.id === editingRecipeId) || null, [recipes, editingRecipeId]);
   const selectedResource = useMemo(() => resources.find(r => r.id === selectedNodeId), [resources, selectedNodeId]);
+  
   const relatedRecipes = useMemo(() => {
     if (!selectedNodeId) return { asInput: [], asOutput: [] };
     return {
@@ -189,6 +190,51 @@ export default function App() {
       asOutput: recipes.filter(r => r.outputs.some(o => o.resourceId === selectedNodeId)),
     };
   }, [recipes, selectedNodeId]);
+
+  const renderRecipeEntry = (recipe: Recipe) => {
+    const machine = machines.find(m => m.id === recipe.machineId);
+    const getResName = (id: string) => resources.find(r => r.id === id)?.name || id;
+
+    return (
+      <div 
+        key={recipe.id} 
+        onClick={() => handleEditRecipe(recipe.id)} 
+        className="bg-zinc-800/40 p-3 rounded-lg border border-zinc-800 hover:border-blue-600/50 hover:bg-zinc-800/80 transition-all cursor-pointer group"
+      >
+        <div className="flex justify-between items-start mb-2">
+          <div className="font-bold text-sm text-zinc-100 group-hover:text-blue-400 transition-colors">
+            {recipe.name}
+          </div>
+          <div className="text-[9px] text-zinc-500 font-bold uppercase bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-700/50">
+            {machine?.name || 'Unknown'}
+          </div>
+        </div>
+        
+        <div className="flex flex-col gap-1.5 text-[10px] text-zinc-400">
+          <div className="flex items-center gap-2 overflow-hidden">
+            <span className="shrink-0 text-emerald-500/80 font-bold uppercase tracking-tighter">IN:</span>
+            <span className="truncate opacity-80">
+              {recipe.inputs.map(i => `${i.amount}x ${getResName(i.resourceId)}`).join(', ')}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 overflow-hidden">
+            <span className="shrink-0 text-orange-500/80 font-bold uppercase tracking-tighter">OUT:</span>
+            <span className="truncate opacity-80">
+              {recipe.outputs.map(o => `${o.amount}x ${getResName(o.resourceId)}`).join(', ')}
+            </span>
+          </div>
+        </div>
+        
+        {/* Visual duration bar */}
+        <div className="mt-2.5 h-0.5 w-full bg-zinc-900 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-blue-500/40 group-hover:bg-blue-500/60 transition-colors" 
+            style={{ width: `${Math.min(100, (recipe.duration || 100) / 10)}%` }}
+          />
+        </div>
+      </div>
+    );
+  };
 
   return (
     <I18nContext.Provider value={{ locale, setLocale, t }}>
@@ -263,43 +309,51 @@ export default function App() {
 
         {selectedResource && (
           <div className="w-80 bg-zinc-900 border-l border-zinc-800 flex flex-col shadow-2xl z-10 shrink-0 animate-in slide-in-from-right-full duration-300">
-            <div className="h-16 flex items-center px-6 border-b border-zinc-800 bg-zinc-800/50">
+            <div className="h-16 flex items-center px-6 border-b border-zinc-800 bg-zinc-800/50 shrink-0">
                <h2 className="font-bold text-lg text-white truncate">{selectedResource.name}</h2>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-6">
-               <div className="bg-zinc-950 rounded p-4 border border-zinc-800">
-                  <div className="text-xs text-zinc-500 uppercase tracking-wider mb-2">{t('common.metadata')}</div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <span className="block text-xs text-zinc-500">{t('common.type')}</span>
-                      <span className="inline-block px-2 py-0.5 rounded text-xs capitalize mt-1 font-bold bg-blue-900/50 text-blue-200">
+            <div className="flex-1 overflow-y-auto p-5 space-y-8">
+               <div className="bg-zinc-950 rounded-xl p-4 border border-zinc-800 shadow-inner">
+                  <div className="text-[10px] text-zinc-600 uppercase font-black tracking-widest mb-3">{t('common.metadata')}</div>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-zinc-500 font-medium">{t('common.type')}</span>
+                      <span className="px-2.5 py-1 rounded-md text-[10px] font-bold bg-blue-600/20 text-blue-400 border border-blue-600/30">
                         {categories.find(c => c.id === selectedResource.type)?.name || selectedResource.type}
                       </span>
                     </div>
-                    <div>
-                      <span className="block text-xs text-zinc-500">{t('common.id')}</span>
-                      <span className="block text-xs font-mono text-zinc-400 mt-1 truncate">{selectedResource.id}</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-zinc-500 font-medium">{t('common.id')}</span>
+                      <span className="text-[10px] font-mono text-zinc-400 truncate max-w-[140px] opacity-70">{selectedResource.id}</span>
                     </div>
                   </div>
                </div>
-               <div>
-                  <h3 className="text-sm font-semibold text-zinc-300 mb-3 flex items-center gap-2">{t('panel.producedBy')} <span className="text-xs bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-500">{relatedRecipes.asOutput.length}</span></h3>
-                  <div className="space-y-2">
-                    {relatedRecipes.asOutput.map(r => (
-                      <div key={r.id} onClick={() => handleEditRecipe(r.id)} className="bg-zinc-800/50 p-3 rounded border border-zinc-800 hover:border-green-800/50 transition-colors cursor-pointer group">
-                        <div className="font-medium text-sm text-green-400 mb-1 group-hover:text-green-300 transition-colors">{r.name}</div>
-                      </div>
-                    ))}
+               
+               <div className="space-y-4">
+                  <div className="flex items-center justify-between border-b border-zinc-800/50 pb-2">
+                    <h3 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest">{t('panel.producedBy')}</h3>
+                    <span className="text-[10px] font-bold bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded-full">{relatedRecipes.asOutput.length}</span>
+                  </div>
+                  <div className="space-y-3">
+                    {relatedRecipes.asOutput.length > 0 ? (
+                      relatedRecipes.asOutput.map(renderRecipeEntry)
+                    ) : (
+                      <div className="text-[10px] text-zinc-600 italic px-1">{t('common.noResults')}</div>
+                    )}
                   </div>
                </div>
-               <div>
-                  <h3 className="text-sm font-semibold text-zinc-300 mb-3 flex items-center gap-2">{t('panel.usedIn')} <span className="text-xs bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-500">{relatedRecipes.asInput.length}</span></h3>
-                  <div className="space-y-2">
-                    {relatedRecipes.asInput.map(r => (
-                      <div key={r.id} onClick={() => handleEditRecipe(r.id)} className="bg-zinc-800/50 p-3 rounded border border-zinc-800 hover:border-blue-800/50 transition-colors cursor-pointer group">
-                        <div className="font-medium text-sm text-blue-400 mb-1 group-hover:text-blue-300 transition-colors">{r.name}</div>
-                      </div>
-                    ))}
+               
+               <div className="space-y-4">
+                  <div className="flex items-center justify-between border-b border-zinc-800/50 pb-2">
+                    <h3 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest">{t('panel.usedIn')}</h3>
+                    <span className="text-[10px] font-bold bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded-full">{relatedRecipes.asInput.length}</span>
+                  </div>
+                  <div className="space-y-3">
+                    {relatedRecipes.asInput.length > 0 ? (
+                      relatedRecipes.asInput.map(renderRecipeEntry)
+                    ) : (
+                      <div className="text-[10px] text-zinc-600 italic px-1">{t('common.noResults')}</div>
+                    )}
                   </div>
                </div>
             </div>
