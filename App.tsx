@@ -11,7 +11,7 @@ import Sidebar from './components/Sidebar';
 import ResourceDetailPanel from './components/ResourceDetailPanel';
 import RecipeModal from './components/RecipeModal';
 import ResourceLibrary from './components/ResourceLibrary';
-import { Database, Download, Upload, X } from 'lucide-react';
+import { Database, Download, Upload, X, Wifi, WifiOff } from 'lucide-react';
 
 // I18n Context
 interface I18nContextType {
@@ -27,7 +27,7 @@ export const useI18n = () => {
 };
 
 function MainLayout() {
-  const { resources, recipes, categories, machines, setCategories, setResources, setRecipes, setMachines, addRecipe, deleteRecipe, addResource, updateResource, deleteResource, addCategory, updateCategory, deleteCategory, addMachine, updateMachine, deleteMachine } = useModpack();
+  const { resources, recipes, categories, machines, setCategories, setResources, setRecipes, setMachines, addRecipe, deleteRecipe, addResource, updateResource, deleteResource, addCategory, updateCategory, deleteCategory, addMachine, updateMachine, deleteMachine, syncStatus, syncSettings } = useModpack();
   const { t } = useI18n();
   const { theme } = useTheme();
   const { showNotification } = useNotifications();
@@ -139,9 +139,25 @@ function MainLayout() {
         </ReactFlow>
         <div className="absolute top-4 left-4 pointer-events-none">
           <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur border border-zinc-200 dark:border-zinc-800 p-2 rounded text-xs text-zinc-500 dark:text-zinc-400 shadow-xl flex items-center gap-3">
-            <span>{resources.length} {t('sidebar.resources')}</span>
-            <span className="w-1 h-1 bg-zinc-300 dark:bg-zinc-700 rounded-full" />
-            <span>{recipes.length} {t('sidebar.recipes')}</span>
+            <div className="flex items-center gap-3">
+              <span>{resources.length} {t('sidebar.resources')}</span>
+              <span className="w-1 h-1 bg-zinc-300 dark:bg-zinc-700 rounded-full" />
+              <span>{recipes.length} {t('sidebar.recipes')}</span>
+            </div>
+            {syncSettings.enabled && (
+              <>
+                <div className="w-px h-3 bg-zinc-200 dark:bg-zinc-800 mx-1" />
+                <div className="flex items-center" title={t('management.sync.status')}>
+                  {syncStatus === 'success' ? (
+                    <Wifi size={14} className="text-emerald-500 animate-pulse" />
+                  ) : syncStatus === 'error' ? (
+                    <WifiOff size={14} className="text-red-500" />
+                  ) : (
+                    <Wifi size={14} className="text-zinc-400 animate-pulse" />
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
