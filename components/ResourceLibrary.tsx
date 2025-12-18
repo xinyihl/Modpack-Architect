@@ -134,12 +134,12 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
   };
 
   const addSlot = (type: 'input' | 'output') => {
-    const newSlot: MachineSlot = { type: categories[0]?.id || 'item', label: 'Slot' };
+    const newSlot: MachineSlot = { type: categories[0]?.id || 'item', label: '', optional: false };
     if (type === 'input') setMacInputs([...macInputs, newSlot]);
     else setMacOutputs([...macOutputs, newSlot]);
   };
 
-  const updateSlot = (type: 'input' | 'output', index: number, field: keyof MachineSlot, value: string) => {
+  const updateSlot = (type: 'input' | 'output', index: number, field: keyof MachineSlot, value: any) => {
     const setter = type === 'input' ? setMacInputs : setMacOutputs;
     setter(prev => prev.map((s, i) => i === index ? { ...s, [field]: value } : s));
   };
@@ -513,59 +513,117 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
             
             <div className="grid grid-cols-2 gap-8">
               <div className="space-y-4">
-                <div className="flex items-center justify-between pb-1">
-                    <label className="text-[11px] font-black text-emerald-500 uppercase tracking-widest">{safeUpperCase(t('form.inputSlots'))}</label>
-                    <button type="button" onClick={() => addSlot('input')} className="text-[10px] font-black text-emerald-500 hover:text-emerald-400 transition-colors bg-emerald-500/10 px-2 py-1 rounded">{safeUpperCase(t('form.addSlot'))}</button>
+                <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-black text-emerald-500 uppercase tracking-widest">{t('form.inputSlots')}</label>
+                    <button type="button" onClick={() => addSlot('input')} className="text-[10px] font-black text-emerald-500 hover:text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20 transition-all flex items-center gap-1">
+                      <Plus size={10} /> {safeUpperCase(t('form.addSlot'))}
+                    </button>
                 </div>
-                <div className="space-y-2 min-h-[100px] max-h-[240px] overflow-y-auto pr-1 custom-scrollbar">
+                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                     {macInputs.length > 0 ? (
                       macInputs.map((slot, idx) => (
-                        <div key={idx} className="flex flex-col gap-2 p-3 bg-zinc-950/60 border border-zinc-800 rounded-xl animate-in slide-in-from-bottom-1 duration-200">
-                            <div className="flex items-center gap-2">
-                              <input type="text" value={slot.label} onChange={(e) => updateSlot('input', idx, 'label', e.target.value)} className="flex-1 bg-transparent border-none text-xs text-zinc-200 outline-none font-bold" placeholder="Slot Label" />
-                              <button type="button" onClick={() => removeSlot('input', idx)} className="text-zinc-600 hover:text-red-500 transition-colors"><X size={14}/></button>
+                        <div key={idx} className="bg-zinc-950/50 border border-zinc-800 rounded-2xl p-4 space-y-3 group hover:border-zinc-700/50 transition-all animate-in slide-in-from-bottom-2 duration-200">
+                            <div className="flex items-center justify-between">
+                                <input 
+                                  type="text" 
+                                  value={slot.label} 
+                                  onChange={(e) => updateSlot('input', idx, 'label', e.target.value)} 
+                                  className="bg-transparent border-none text-xs text-zinc-200 outline-none font-black uppercase tracking-wide flex-1 placeholder:text-zinc-700" 
+                                  placeholder="Slot Label..." 
+                                />
+                                <button type="button" onClick={() => removeSlot('input', idx)} className="text-zinc-600 hover:text-red-500 transition-colors">
+                                  <X size={14}/>
+                                </button>
                             </div>
-                            <select value={slot.type} onChange={(e) => updateSlot('input', idx, 'type', e.target.value)} className="bg-zinc-900/50 border border-zinc-800 rounded px-2 py-1 text-[10px] font-black uppercase text-zinc-400 outline-none cursor-pointer">
+                            <div className="flex items-center gap-3">
+                              <select 
+                                value={slot.type} 
+                                onChange={(e) => updateSlot('input', idx, 'type', e.target.value)} 
+                                className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-[10px] font-black uppercase text-zinc-400 outline-none focus:ring-1 focus:ring-emerald-500/50 cursor-pointer"
+                              >
                                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                            </select>
+                              </select>
+                              <label className="flex items-center gap-2 cursor-pointer group/label">
+                                <div className="relative flex items-center">
+                                  <input 
+                                    type="checkbox" 
+                                    checked={slot.optional} 
+                                    onChange={(e) => updateSlot('input', idx, 'optional', e.target.checked)}
+                                    className="sr-only peer" 
+                                  />
+                                  <div className="w-4 h-4 bg-zinc-900 border border-zinc-800 rounded-md peer-checked:bg-emerald-500 peer-checked:border-emerald-500 transition-all"></div>
+                                  <X size={10} className="absolute inset-0 m-auto text-white opacity-0 peer-checked:opacity-100 scale-0 peer-checked:scale-100 transition-all" />
+                                </div>
+                                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-tighter select-none">可选</span>
+                              </label>
+                            </div>
                         </div>
                       ))
                     ) : (
-                      <div className="flex items-center justify-center h-[100px] border border-dashed border-zinc-800 rounded-xl">
-                        <span className="text-[10px] font-black text-zinc-700 uppercase tracking-widest">EMPTY</span>
+                      <div className="flex items-center justify-center h-[120px] border border-dashed border-zinc-800 rounded-2xl">
+                        <span className="text-[10px] font-black text-zinc-800 uppercase tracking-widest">NO INPUTS DEFINED</span>
                       </div>
                     )}
                 </div>
               </div>
 
               <div className="space-y-4">
-                <div className="flex items-center justify-between pb-1">
-                    <label className="text-[11px] font-black text-orange-500 uppercase tracking-widest">{safeUpperCase(t('form.outputSlots'))}</label>
-                    <button type="button" onClick={() => addSlot('output')} className="text-[10px] font-black text-orange-500 hover:text-orange-400 transition-colors bg-orange-500/10 px-2 py-1 rounded">{safeUpperCase(t('form.addSlot'))}</button>
+                <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-black text-orange-500 uppercase tracking-widest">{t('form.outputSlots')}</label>
+                    <button type="button" onClick={() => addSlot('output')} className="text-[10px] font-black text-orange-500 hover:text-orange-400 bg-orange-500/10 px-3 py-1.5 rounded-full border border-orange-500/20 transition-all flex items-center gap-1">
+                      <Plus size={10} /> {safeUpperCase(t('form.addSlot'))}
+                    </button>
                 </div>
-                <div className="space-y-2 min-h-[100px] max-h-[240px] overflow-y-auto pr-1 custom-scrollbar">
+                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                     {macOutputs.length > 0 ? (
                       macOutputs.map((slot, idx) => (
-                        <div key={idx} className="flex flex-col gap-2 p-3 bg-zinc-950/60 border border-zinc-800 rounded-xl animate-in slide-in-from-bottom-1 duration-200">
-                            <div className="flex items-center gap-2">
-                              <input type="text" value={slot.label} onChange={(e) => updateSlot('output', idx, 'label', e.target.value)} className="flex-1 bg-transparent border-none text-xs text-zinc-200 outline-none font-bold" placeholder="Slot Label" />
-                              <button type="button" onClick={() => removeSlot('output', idx)} className="text-zinc-600 hover:text-red-500 transition-colors"><X size={14}/></button>
+                        <div key={idx} className="bg-zinc-950/50 border border-zinc-800 rounded-2xl p-4 space-y-3 group hover:border-zinc-700/50 transition-all animate-in slide-in-from-bottom-2 duration-200">
+                            <div className="flex items-center justify-between">
+                                <input 
+                                  type="text" 
+                                  value={slot.label} 
+                                  onChange={(e) => updateSlot('output', idx, 'label', e.target.value)} 
+                                  className="bg-transparent border-none text-xs text-zinc-200 outline-none font-black uppercase tracking-wide flex-1 placeholder:text-zinc-700" 
+                                  placeholder="Slot Label..." 
+                                />
+                                <button type="button" onClick={() => removeSlot('output', idx)} className="text-zinc-600 hover:text-red-500 transition-colors">
+                                  <X size={14}/>
+                                </button>
                             </div>
-                            <select value={slot.type} onChange={(e) => updateSlot('output', idx, 'type', e.target.value)} className="bg-zinc-900/50 border border-zinc-800 rounded px-2 py-1 text-[10px] font-black uppercase text-zinc-400 outline-none cursor-pointer">
+                            <div className="flex items-center gap-3">
+                              <select 
+                                value={slot.type} 
+                                onChange={(e) => updateSlot('output', idx, 'type', e.target.value)} 
+                                className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-[10px] font-black uppercase text-zinc-400 outline-none focus:ring-1 focus:ring-orange-500/50 cursor-pointer"
+                              >
                                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                            </select>
+                              </select>
+                              <label className="flex items-center gap-2 cursor-pointer group/label">
+                                <div className="relative flex items-center">
+                                  <input 
+                                    type="checkbox" 
+                                    checked={slot.optional} 
+                                    onChange={(e) => updateSlot('output', idx, 'optional', e.target.checked)}
+                                    className="sr-only peer" 
+                                  />
+                                  <div className="w-4 h-4 bg-zinc-900 border border-zinc-800 rounded-md peer-checked:bg-orange-500 peer-checked:border-orange-500 transition-all"></div>
+                                  <X size={10} className="absolute inset-0 m-auto text-white opacity-0 peer-checked:opacity-100 scale-0 peer-checked:scale-100 transition-all" />
+                                </div>
+                                <span className="text-[10px] font-black text-zinc-500 uppercase tracking-tighter select-none">可选</span>
+                              </label>
+                            </div>
                         </div>
                       ))
                     ) : (
-                      <div className="flex items-center justify-center h-[100px] border border-dashed border-zinc-800 rounded-xl">
-                        <span className="text-[10px] font-black text-zinc-700 uppercase tracking-widest">EMPTY</span>
+                      <div className="flex items-center justify-center h-[120px] border border-dashed border-zinc-800 rounded-2xl">
+                        <span className="text-[10px] font-black text-zinc-800 uppercase tracking-widest">NO OUTPUTS DEFINED</span>
                       </div>
                     )}
                 </div>
               </div>
             </div>
 
-            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-xl transition-all font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-600/20 active:scale-[0.98] mt-4">
+            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl transition-all font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-blue-600/20 active:scale-[0.98] mt-4">
               {editingMachineId ? t('common.update') : t('common.create')}
             </button>
           </form>

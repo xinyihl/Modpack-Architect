@@ -55,7 +55,7 @@ export const translations = {
       outputs: "Outputs",
       resourceSearchPlaceholder: "Search {type} by name or ID...",
       emptyLibrary: "Resource library empty. Please register resources in the Management Console.",
-      addSlot: "+ ADD",
+      addSlot: "ADD",
     },
     management: {
       title: "Management Console",
@@ -145,7 +145,7 @@ export const translations = {
       outputSlots: "输出槽",
       resourceSearchPlaceholder: "按名称或ID搜索{type}...",
       emptyLibrary: "资源库为空。请先在设置中注册资源。",
-      addSlot: "+ 添加槽位",
+      addSlot: "添加槽位",
     },
     management: {
       title: "设置",
