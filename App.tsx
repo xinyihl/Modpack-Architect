@@ -159,47 +159,54 @@ function MainLayout() {
       />
 
       {isSettingsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="absolute inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm" onClick={() => setIsSettingsOpen(false)} />
-          <div className="relative w-full max-w-4xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-100 dark:border-zinc-800 bg-white dark:bg-[#1a1a1c]">
-              <div className="flex items-center gap-6">
-                <h2 className="text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-3">
-                  <Database className="text-blue-500" size={24} /> {t('management.title')}
-                </h2>
-                <div className="flex items-center gap-4 border-l border-zinc-200 dark:border-zinc-800 pl-6">
-                  <button 
-                    onClick={handleExport} 
-                    className="flex items-center gap-2 text-sm font-bold text-zinc-500 dark:text-zinc-400 hover:text-blue-600 transition-colors"
-                  >
-                    <Download size={18} /> {t('common.export')}
-                  </button>
-                  <label 
-                    className="flex items-center gap-2 text-sm font-bold text-zinc-500 dark:text-zinc-400 hover:text-blue-600 transition-colors cursor-pointer"
-                  >
-                    <Upload size={18} /> {t('common.import')}
-                    <input type="file" onChange={handleImport} accept=".json" className="hidden" />
-                  </label>
+        <div className="fixed inset-0 z-50 flex flex-col bg-zinc-50 dark:bg-zinc-950 animate-in fade-in duration-200">
+          <header className="h-16 flex items-center justify-between px-8 bg-white dark:bg-[#1a1a1c] border-b border-zinc-200 dark:border-zinc-800 shrink-0 shadow-sm z-20">
+            <div className="flex items-center gap-8">
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-600 p-2 rounded-lg">
+                  <Database className="text-white" size={20} />
                 </div>
+                <h2 className="text-lg font-black uppercase tracking-widest text-zinc-900 dark:text-white">
+                  {t('management.title')}
+                </h2>
               </div>
-              <button 
-                onClick={() => setIsSettingsOpen(false)} 
-                className="p-2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
-              >
-                <X size={24} />
-              </button>
-            </div>
-            <div className="flex-1 p-0 bg-zinc-50 dark:bg-[#09090b] overflow-auto">
-              <div className="p-6">
-                <ResourceLibrary 
-                  resources={resources} categories={categories} machines={machines}
-                  onAddResource={addResource} onUpdateResource={updateResource} onDeleteResource={deleteResource}
-                  onAddCategory={addCategory} onUpdateCategory={updateCategory} onDeleteCategory={deleteCategory}
-                  onAddMachine={addMachine} onUpdateMachine={updateMachine} onDeleteMachine={deleteMachine}
-                />
+              
+              <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800" />
+
+              <div className="flex items-center gap-6">
+                <button 
+                  onClick={handleExport} 
+                  className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400 hover:text-blue-600 transition-colors"
+                >
+                  <Download size={16} /> {t('common.export')}
+                </button>
+                <label 
+                  className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400 hover:text-blue-600 transition-colors cursor-pointer"
+                >
+                  <Upload size={16} /> {t('common.import')}
+                  <input type="file" onChange={handleImport} accept=".json" className="hidden" />
+                </label>
               </div>
             </div>
-          </div>
+
+            <button 
+              onClick={() => setIsSettingsOpen(false)} 
+              className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-500 dark:text-zinc-300 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all active:scale-95"
+            >
+              <X size={16} /> {t('common.cancel')}
+            </button>
+          </header>
+
+          <main className="flex-1 flex flex-col overflow-hidden bg-zinc-50 dark:bg-[#09090b]">
+            <div className="flex-1 w-full max-w-7xl mx-auto px-8 py-8 flex flex-col overflow-hidden">
+              <ResourceLibrary 
+                resources={resources} categories={categories} machines={machines}
+                onAddResource={addResource} onUpdateResource={updateResource} onDeleteResource={deleteResource}
+                onAddCategory={addCategory} onUpdateCategory={updateCategory} onDeleteCategory={deleteCategory}
+                onAddMachine={addMachine} onUpdateMachine={updateMachine} onDeleteMachine={deleteMachine}
+              />
+            </div>
+          </main>
         </div>
       )}
     </div>
