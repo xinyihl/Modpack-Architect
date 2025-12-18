@@ -140,6 +140,8 @@ export const translations = {
       duration: "耗时 (ticks)",
       inputs: "输入项",
       outputs: "输出项",
+      inputSlots: "输入槽",
+      outputSlots: "输出槽",
       resourceSearchPlaceholder: "按名称或ID搜索{type}...",
       emptyLibrary: "资源库为空。请先在设置中注册资源。",
       addSlot: "+ 添加槽位",

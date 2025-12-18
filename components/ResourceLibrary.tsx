@@ -338,8 +338,8 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
                       </div>
                   </div>
                   <div className="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-widest flex items-center gap-4 border-t border-zinc-100 dark:border-zinc-800/50 pt-3">
-                      <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500" /> {m.inputs.length} INPUTS</span>
-                      <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-orange-500" /> {m.outputs.length} OUTPUTS</span>
+                      <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500" /> {m.inputs.length} {t('form.inputs')}</span>
+                      <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-orange-500" /> {m.outputs.length} {t('form.outputs')}</span>
                   </div>
                 </div>
               ))}
@@ -506,8 +506,8 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
             <div className="grid grid-cols-2 gap-8 pt-4">
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/50 pb-1">
-                    <label className="text-[11px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-widest">INPUT SLOTS</label>
-                    <button type="button" onClick={() => addSlot('input')} className="text-[10px] font-black text-emerald-600 hover:text-emerald-500 transition-colors bg-emerald-500/10 px-2 py-0.5 rounded">+ ADD</button>
+                    <label className="text-[11px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-widest">{t('form.inputSlots')}</label>
+                    <button type="button" onClick={() => addSlot('input')} className="text-[10px] font-black text-emerald-600 hover:text-emerald-500 transition-colors bg-emerald-500/10 px-2 py-0.5 rounded">{t('form.addSlot')}</button>
                 </div>
                 <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
                     {macInputs.map((slot, idx) => (
@@ -524,8 +524,8 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
               </div>
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/50 pb-1">
-                    <label className="text-[11px] font-black text-orange-600 dark:text-orange-500 uppercase tracking-widest">OUTPUT SLOTS</label>
-                    <button type="button" onClick={() => addSlot('output')} className="text-[10px] font-black text-orange-600 hover:text-orange-500 transition-colors bg-orange-500/10 px-2 py-0.5 rounded">+ ADD</button>
+                    <label className="text-[11px] font-black text-orange-600 dark:text-orange-500 uppercase tracking-widest">{t('form.outputSlots')}</label>
+                    <button type="button" onClick={() => addSlot('output')} className="text-[10px] font-black text-orange-600 hover:text-orange-500 transition-colors bg-orange-500/10 px-2 py-0.5 rounded">{t('form.addSlot')}</button>
                 </div>
                 <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
                     {macOutputs.map((slot, idx) => (
