@@ -1,4 +1,5 @@
 
+
 export const translations = {
   'en-US': {
     common: {
@@ -27,6 +28,7 @@ export const translations = {
     sidebar: {
       defineRecipe: "Define Recipe",
       searchPlaceholder: "Search resources...",
+      searchRecipesPlaceholder: "Search recipes...",
       definedRecipes: "Defined Recipes",
       management: "Management Console",
       resources: "Resources",
@@ -100,6 +102,7 @@ export const translations = {
     sidebar: {
       defineRecipe: "创建配方",
       searchPlaceholder: "搜索资源...",
+      searchRecipesPlaceholder: "搜索配方...",
       definedRecipes: "已定义配方",
       management: "管理控制台",
       resources: "资源",

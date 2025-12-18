@@ -7,7 +7,7 @@ import ReactFlow, {
   useEdgesState, 
   BackgroundVariant
 } from 'reactflow';
-import { Layers, Plus, Database, Settings, Search, Cpu, X, Languages, Download, Upload, ArrowRight } from 'lucide-react';
+import { Layers, Plus, Database, Settings, Search, Cpu, X, Languages, Download, Upload, ArrowRight, Filter } from 'lucide-react';
 
 import { Resource, Recipe, ResourceCategory, MachineDefinition } from './types';
 import { buildGraph } from './utils/graphBuilder';
@@ -91,6 +91,10 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  
+  // Sidebar Search & Filter State
+  const [recipeSearch, setRecipeSearch] = useState('');
+  const [machineFilter, setMachineFilter] = useState('all');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -191,6 +195,14 @@ export default function App() {
     };
   }, [recipes, selectedNodeId]);
 
+  const filteredRecipesList = useMemo(() => {
+    return recipes.filter(r => {
+      const matchesSearch = r.name.toLowerCase().includes(recipeSearch.toLowerCase());
+      const matchesMachine = machineFilter === 'all' || r.machineId === machineFilter;
+      return matchesSearch && matchesMachine;
+    });
+  }, [recipes, recipeSearch, machineFilter]);
+
   const renderRecipeEntry = (recipe: Recipe) => {
     const machine = machines.find(m => m.id === recipe.machineId);
     const getResName = (id: string) => resources.find(r => r.id === id)?.name || id;
@@ -266,20 +278,44 @@ export default function App() {
                 <Plus size={18} /> {t('sidebar.defineRecipe')}
               </button>
             </div>
-            <div className="px-4 pb-2 shrink-0">
+            
+            {/* Sidebar Recipe Search & Filter */}
+            <div className="px-4 pb-4 shrink-0 space-y-2 border-b border-zinc-800/50 pb-4 mb-2">
                <div className="relative">
                   <Search className="absolute left-2 top-2.5 text-zinc-500" size={14} />
-                  <input type="text" placeholder={t('sidebar.searchPlaceholder')} className="w-full bg-zinc-800 border-none rounded py-2 pl-8 pr-4 text-sm text-zinc-300 focus:ring-1 focus:ring-blue-500" />
+                  <input 
+                    type="text" 
+                    value={recipeSearch}
+                    onChange={(e) => setRecipeSearch(e.target.value)}
+                    placeholder={t('sidebar.searchRecipesPlaceholder')} 
+                    className="w-full bg-zinc-800 border-none rounded py-2 pl-8 pr-4 text-sm text-zinc-300 focus:ring-1 focus:ring-blue-500" 
+                  />
+               </div>
+               <div className="flex items-center gap-2">
+                  <div className="bg-zinc-800 rounded p-1.5 shrink-0">
+                    <Filter size={12} className="text-zinc-500" />
+                  </div>
+                  <select 
+                    value={machineFilter}
+                    onChange={(e) => setMachineFilter(e.target.value)}
+                    className="flex-1 bg-zinc-800 border-none rounded py-1 px-3 text-[10px] font-bold uppercase text-zinc-400 focus:ring-1 focus:ring-blue-500 outline-none h-7 tracking-tighter"
+                  >
+                    <option value="all">ALL MACHINES</option>
+                    {machines.map(m => <option key={m.id} value={m.id}>{m.name.toUpperCase()}</option>)}
+                  </select>
                </div>
             </div>
+
             <div className="flex-1 overflow-y-auto px-2">
-              <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider px-2 py-2">{t('sidebar.definedRecipes')} ({recipes.length})</h3>
+              <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider px-2 py-2">
+                {t('sidebar.definedRecipes')} ({filteredRecipesList.length})
+              </h3>
               <div className="space-y-1">
-                {recipes.map(recipe => (
+                {filteredRecipesList.length > 0 ? filteredRecipesList.map(recipe => (
                   <div key={recipe.id} onClick={() => handleEditRecipe(recipe.id)} className={`group p-2 rounded cursor-pointer border transition-colors ${editingRecipeId === recipe.id ? 'bg-blue-900/20 border-blue-800' : 'hover:bg-zinc-800 border-transparent hover:border-zinc-700'}`}>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-zinc-200">{recipe.name}</span>
-                      <div className="flex items-center gap-1">
+                      <span className="text-sm font-medium text-zinc-200 truncate pr-2">{recipe.name}</span>
+                      <div className="flex items-center gap-1 shrink-0">
                         <Cpu size={10} className="text-zinc-500" />
                         <span className="text-[10px] text-zinc-500 uppercase tracking-tighter">
                           {machines.find(m => m.id === recipe.machineId)?.name || 'Unknown'}
@@ -287,7 +323,11 @@ export default function App() {
                       </div>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <div className="text-center py-10 text-zinc-600 text-xs italic">
+                    {t('common.noResults')}
+                  </div>
+                )}
               </div>
             </div>
           </div>
