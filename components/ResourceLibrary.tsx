@@ -357,12 +357,9 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
                     </div>
                     <h3 className="text-lg font-black text-zinc-900 dark:text-white uppercase tracking-widest">{t('management.sync.title')}</h3>
                 </div>
-                <div className={`flex items-center gap-2.5 bg-zinc-50 dark:bg-zinc-950 px-4 py-2 rounded-full border border-zinc-100 dark:border-zinc-800 shadow-sm`}>
-                  {syncStatus === 'success' ? <Wifi size={16} className="text-emerald-500" /> : <WifiOff size={16} className="text-zinc-400" />}
-                  <span className={`text-[11px] font-black uppercase tracking-widest flex items-center gap-2 ${syncStatus === 'success' ? 'text-emerald-500' : 'text-zinc-500'}`}>
-                    {syncStatus === 'idle' && <span className="bg-red-500/10 text-red-500 px-1.5 py-0.5 rounded-md text-[8px] flex items-center gap-1 font-black"><WifiOff size={10}/> IDLE</span>}
-                    {syncStatus !== 'idle' && syncStatus.toUpperCase()}
-                  </span>
+                <div className={`flex items-center gap-2.5 bg-zinc-50 dark:bg-zinc-950 px-3 py-1.5 rounded-full border border-zinc-100 dark:border-zinc-800`}>
+                  {syncStatus === 'success' ? <Wifi size={14} className="text-emerald-500" /> : <WifiOff size={14} className="text-zinc-400" />}
+                  <span className={`text-[10px] font-black uppercase tracking-widest ${syncStatus === 'success' ? 'text-emerald-500' : 'text-zinc-500'}`}>{syncStatus.toUpperCase()}</span>
                 </div>
               </div>
 

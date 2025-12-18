@@ -141,11 +141,11 @@ export const translations = {
       inputs: "输入项",
       outputs: "输出项",
       resourceSearchPlaceholder: "按名称或ID搜索{type}...",
-      emptyLibrary: "资源库为空。请先在管理控制台中注册资源。",
+      emptyLibrary: "资源库为空。请先在设置中注册资源。",
       addSlot: "+ 添加槽位",
     },
     management: {
-      title: "管理控制台",
+      title: "设置",
       tabs: {
         resources: "资源管理",
         categories: "分类管理",
