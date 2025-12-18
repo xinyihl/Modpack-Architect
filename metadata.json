@@ -1,0 +1,5 @@
+{
+  "name": "Modpack Architect",
+  "description": "A recipe-driven Minecraft modpack planning tool that visualizes resource dependency graphs.",
+  "requestFramePermissions": []
+}
