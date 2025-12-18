@@ -50,6 +50,11 @@ const RecipeModal: React.FC<RecipeModalProps> = ({ resources, machines, editingR
     }
   };
 
+  const handleSave = (recipe: Recipe) => {
+    onSave(recipe);
+    onClose();
+  };
+
   const handleDelete = (id: string) => {
     if (onDelete) {
       onDelete(id);
@@ -97,7 +102,7 @@ const RecipeModal: React.FC<RecipeModalProps> = ({ resources, machines, editingR
           )}
           {step === 'config' && selectedMachine && (
             <div className="animate-in fade-in slide-in-from-right-2 duration-300">
-              <RecipeForm resources={resources} machine={selectedMachine} initialRecipe={editingRecipe} onSave={onSave} onCancel={handleReset} onDelete={handleDelete} />
+              <RecipeForm resources={resources} machine={selectedMachine} initialRecipe={editingRecipe} onSave={handleSave} onCancel={handleReset} onDelete={handleDelete} />
             </div>
           )}
         </div>

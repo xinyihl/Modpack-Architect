@@ -28,6 +28,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
   const [activeSlot, setActiveSlot] = useState<{ type: 'input' | 'output', index: number } | null>(null);
 
   const containerRef = useRef<HTMLFormElement>(null);
+  const isUserEditingName = useRef(false);
 
   useEffect(() => {
     const initStacks = (slots: MachineSlot[], existingStacks?: ResourceStack[]) => {
@@ -50,6 +51,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
       
       setInputSearch(inStacks.map(s => resources.find(r => r.id === s.resourceId)?.name || ''));
       setOutputSearch(outStacks.map(s => resources.find(r => r.id === s.resourceId)?.name || ''));
+      isUserEditingName.current = true; // Don't auto-overwrite existing recipes
     } else {
       setName('');
       setDuration(100);
@@ -57,8 +59,22 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
       setOutputs(initStacks(machine.outputs));
       setInputSearch(machine.inputs.map(() => ''));
       setOutputSearch(machine.outputs.map(() => ''));
+      isUserEditingName.current = false;
     }
   }, [initialRecipe, resources, machine]);
+
+  // Auto-generate name based on first input
+  useEffect(() => {
+    if (!initialRecipe && !isUserEditingName.current && inputs.length > 0) {
+      const firstInputResId = inputs[0].resourceId;
+      if (firstInputResId) {
+        const res = resources.find(r => r.id === firstInputResId);
+        if (res) {
+          setName(`${machine.name} - ${res.name}`);
+        }
+      }
+    }
+  }, [inputs, machine.name, resources, initialRecipe]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -265,7 +281,10 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
             required
             type="text"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => {
+              setName(e.target.value);
+              isUserEditingName.current = true;
+            }}
             className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-2.5 text-zinc-900 dark:text-white focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-zinc-200 dark:placeholder:text-zinc-800 font-medium shadow-sm"
             placeholder={t('form.recipeIdPlaceholder')}
           />
