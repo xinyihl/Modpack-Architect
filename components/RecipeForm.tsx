@@ -138,12 +138,12 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
           return (
             <div key={idx} className="space-y-1.5 relative">
               <div className="flex justify-between items-center px-0.5">
-                 <span className="text-[10px] text-zinc-500 font-semibold">{slot.label} ({slot.type})</span>
+                 <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-semibold">{slot.label} ({slot.type})</span>
               </div>
-              <div className={`flex items-center gap-2 p-2 bg-zinc-900/40 rounded border transition-all ${
+              <div className={`flex items-center gap-2 p-2 bg-zinc-50 dark:bg-zinc-900/40 rounded border transition-all ${
                 activeSlot?.type === type && activeSlot?.index === idx 
-                  ? 'border-blue-500 ring-1 ring-blue-500/20 bg-zinc-900' 
-                  : 'border-zinc-800 focus-within:border-zinc-700'
+                  ? 'border-blue-500 ring-1 ring-blue-500/20 bg-white dark:bg-zinc-900' 
+                  : 'border-zinc-200 dark:border-zinc-800 focus-within:border-zinc-300 dark:focus-within:border-zinc-700'
               }`}>
                 <div className={`w-1 h-6 rounded-full shrink-0 ${
                    slot.type === 'energy' ? 'bg-yellow-500' : 
@@ -163,7 +163,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
                       setSearchTerms(newSearch);
                       setActiveSlot({ type, index: idx });
                     }}
-                    className="flex-1 bg-transparent text-sm text-zinc-200 outline-none border-none p-1 placeholder:text-zinc-700 font-medium"
+                    className="flex-1 bg-transparent text-sm text-zinc-800 dark:text-zinc-200 outline-none border-none p-1 placeholder:text-zinc-300 dark:placeholder:text-zinc-700 font-medium"
                   />
                   
                   {searchTerm && (
@@ -175,17 +175,17 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
                         setSearchTerms(newSearch);
                         updateStack(idx, 'resourceId', '', setter);
                       }}
-                      className="text-zinc-700 hover:text-zinc-500 mr-1"
+                      className="text-zinc-400 dark:text-zinc-700 hover:text-zinc-600 dark:hover:text-zinc-500 mr-1"
                     >
                       <X size={14} />
                     </button>
                   )}
                   
                   {activeSlot?.type === type && activeSlot?.index === idx && (
-                    <div className="absolute top-[calc(100%+8px)] left-0 w-full min-w-[240px] bg-[#1e1e21] border border-[#2d2d31] rounded-xl shadow-[0_15px_50px_rgba(0,0,0,0.6)] z-[100] max-h-52 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-150">
-                      <div className="px-3 py-2.5 sticky top-0 bg-[#1e1e21] border-b border-[#2d2d31]/50 flex items-center gap-2">
-                         <Search size={10} className="text-zinc-500" />
-                         <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.1em]">{t('common.results')}</span>
+                    <div className="absolute top-[calc(100%+8px)] left-0 w-full min-w-[240px] bg-white dark:bg-[#1e1e21] border border-zinc-200 dark:border-[#2d2d31] rounded-xl shadow-xl z-[100] max-h-52 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-150">
+                      <div className="px-3 py-2.5 sticky top-0 bg-white dark:bg-[#1e1e21] border-b border-zinc-100 dark:border-[#2d2d31]/50 flex items-center gap-2">
+                         <Search size={10} className="text-zinc-400 dark:text-zinc-500" />
+                         <span className="text-[9px] text-zinc-400 dark:text-zinc-500 font-bold uppercase tracking-[0.1em]">{t('common.results')}</span>
                       </div>
                       {filteredResources.length > 0 ? (
                         filteredResources.map(r => (
@@ -194,20 +194,20 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
                             type="button"
                             onMouseDown={(e) => e.preventDefault()}
                             onClick={() => handleSelectResource(type, idx, r)}
-                            className={`w-full text-left px-4 py-3 text-sm hover:bg-[#2d2d31]/80 group flex flex-col transition-colors border-b border-[#2d2d31]/20 last:border-none ${
-                              stacks[idx]?.resourceId === r.id ? 'bg-blue-600/10' : ''
+                            className={`w-full text-left px-4 py-3 text-sm hover:bg-zinc-50 dark:hover:bg-[#2d2d31]/80 group flex flex-col transition-colors border-b border-zinc-100 dark:border-[#2d2d31]/20 last:border-none ${
+                              stacks[idx]?.resourceId === r.id ? 'bg-blue-50 dark:bg-blue-600/10' : ''
                             }`}
                           >
-                            <span className={`font-bold transition-colors ${stacks[idx]?.resourceId === r.id ? 'text-blue-400' : 'text-zinc-100 group-hover:text-blue-400'}`}>
+                            <span className={`font-bold transition-colors ${stacks[idx]?.resourceId === r.id ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-700 dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400'}`}>
                               {r.name}
                             </span>
-                            <span className="text-[10px] text-zinc-500 font-mono mt-0.5 opacity-70">
+                            <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono mt-0.5 opacity-70">
                               ID: {r.id}
                             </span>
                           </button>
                         ))
                       ) : (
-                        <div className="px-4 py-8 text-xs text-zinc-500 text-center italic flex flex-col items-center gap-2">
+                        <div className="px-4 py-8 text-xs text-zinc-400 dark:text-zinc-500 text-center italic flex flex-col items-center gap-2">
                           <AlertCircle size={16} className="opacity-20" />
                           <span>{t('common.noResults')}</span>
                         </div>
@@ -216,16 +216,16 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
                   )}
                 </div>
 
-                <div className="h-4 w-px bg-zinc-800 mx-1" />
+                <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 mx-1" />
                 
                 <div className="flex items-center gap-1.5 shrink-0 px-1">
                   <input
                     type="number"
                     value={stacks[idx]?.amount || 0}
                     onChange={(e) => updateStack(idx, 'amount', Number(e.target.value), setter)}
-                    className="w-8 bg-transparent border-none text-sm text-right focus:outline-none text-zinc-300 font-mono p-0"
+                    className="w-8 bg-transparent border-none text-sm text-right focus:outline-none text-zinc-700 dark:text-zinc-300 font-mono p-0"
                   />
-                  <span className="text-[9px] text-zinc-600 font-black uppercase tracking-tighter">QTY</span>
+                  <span className="text-[9px] text-zinc-400 dark:text-zinc-600 font-black uppercase tracking-tighter">QTY</span>
                 </div>
               </div>
             </div>
@@ -237,14 +237,14 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
 
   return (
     <form ref={containerRef} onSubmit={handleSubmit} className="space-y-6">
-      <div className="flex items-center gap-4 bg-zinc-900/40 p-4 rounded-xl border border-zinc-800/60 shadow-inner">
-        <div className="w-12 h-12 bg-zinc-950 rounded-lg flex items-center justify-center font-bold text-xl text-zinc-700 border border-zinc-900">
+      <div className="flex items-center gap-4 bg-zinc-50 dark:bg-zinc-900/40 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800/60 shadow-inner">
+        <div className="w-12 h-12 bg-white dark:bg-zinc-950 rounded-lg flex items-center justify-center font-bold text-xl text-zinc-300 dark:text-zinc-700 border border-zinc-200 dark:border-zinc-900">
           {machine.name[0]}
         </div>
         <div>
-          <h3 className="font-bold text-white text-lg flex items-center gap-2">
+          <h3 className="font-bold text-zinc-900 dark:text-white text-lg flex items-center gap-2">
             {machine.name}
-            <span className="text-[9px] bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-500 font-bold uppercase border border-zinc-700">{t('common.machine')}</span>
+            <span className="text-[9px] bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-500 font-bold uppercase border border-zinc-200 dark:border-zinc-700">{t('common.machine')}</span>
           </h3>
           <p className="text-xs text-zinc-500 opacity-80">{machine.description}</p>
         </div>
@@ -252,57 +252,57 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <div className="sm:col-span-2 space-y-1.5">
-          <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">{t('form.recipeId')}</label>
+          <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest ml-1">{t('form.recipeId')}</label>
           <input
             required
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-zinc-800 font-medium"
+            className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-2.5 text-zinc-900 dark:text-white focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-zinc-200 dark:placeholder:text-zinc-800 font-medium shadow-sm"
             placeholder={t('form.recipeIdPlaceholder')}
           />
         </div>
         <div className="space-y-1.5">
-          <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">{t('form.duration')}</label>
+          <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest ml-1">{t('form.duration')}</label>
           <div className="relative">
             <input
               type="number"
               value={duration}
               onChange={(e) => setDuration(Number(e.target.value))}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white outline-none focus:ring-1 focus:ring-blue-500 transition-all font-mono"
+              className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-2.5 text-zinc-900 dark:text-white outline-none focus:ring-1 focus:ring-blue-500 transition-all font-mono shadow-sm"
             />
-            <span className="absolute right-3 top-3 text-[9px] font-black text-zinc-600 tracking-wider">TICKS</span>
+            <span className="absolute right-3 top-3 text-[9px] font-black text-zinc-300 dark:text-zinc-600 tracking-wider">TICKS</span>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
         <div>
-          {renderFixedSlots(machine.inputs, inputs, inputSearch, setInputSearch, setInputs, 'input', t('form.inputs'), 'text-emerald-500')}
+          {renderFixedSlots(machine.inputs, inputs, inputSearch, setInputSearch, setInputs, 'input', t('form.inputs'), 'text-emerald-600 dark:text-emerald-500')}
         </div>
         <div>
-          {renderFixedSlots(machine.outputs, outputs, outputSearch, setOutputSearch, setOutputs, 'output', t('form.outputs'), 'text-orange-500')}
+          {renderFixedSlots(machine.outputs, outputs, outputSearch, setOutputSearch, setOutputs, 'output', t('form.outputs'), 'text-orange-600 dark:text-orange-500')}
         </div>
       </div>
 
-      <div className="flex justify-end items-center gap-6 pt-4 border-t border-zinc-800/60 mt-4">
+      <div className="flex justify-end items-center gap-6 pt-4 border-t border-zinc-100 dark:border-zinc-800/60 mt-4">
         <button
           type="button"
           onClick={onCancel}
-          className="text-sm font-bold text-zinc-500 hover:text-zinc-200 transition-colors px-2"
+          className="text-sm font-bold text-zinc-400 dark:text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors px-2"
         >
           {t('common.cancel')}
         </button>
         <button
           type="submit"
-          className="bg-blue-600 hover:bg-blue-500 text-white px-10 py-2.5 rounded-lg font-black text-sm flex items-center gap-3 transition-all shadow-[0_10px_25px_rgba(37,99,235,0.25)] active:scale-[0.98]"
+          className="bg-blue-600 hover:bg-blue-500 text-white px-10 py-2.5 rounded-lg font-black text-sm flex items-center gap-3 transition-all shadow-md active:scale-[0.98]"
         >
           <Save size={18} strokeWidth={2.5} /> {initialRecipe ? t('common.update') : t('common.create')}
         </button>
       </div>
 
       {resources.length === 0 && (
-        <div className="flex items-center gap-2 p-3 bg-yellow-900/10 border border-yellow-700/20 rounded-lg text-[10px] text-yellow-600 font-bold uppercase tracking-tight">
+        <div className="flex items-center gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-700/20 rounded-lg text-[10px] text-yellow-700 dark:text-yellow-600 font-bold uppercase tracking-tight">
           <AlertCircle size={14} />
           <span>{t('form.emptyLibrary')}</span>
         </div>

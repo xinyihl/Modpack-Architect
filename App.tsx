@@ -2,6 +2,7 @@
 import React, { useState, useMemo, useEffect, createContext, useContext } from 'react';
 import ReactFlow, { Controls, Background, useNodesState, useEdgesState, BackgroundVariant } from 'reactflow';
 import { ModpackProvider, useModpack } from './context/ModpackContext';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { buildGraph } from './utils/graphBuilder';
 import { translations, Locale } from './translations';
 
@@ -27,6 +28,7 @@ export const useI18n = () => {
 function MainLayout() {
   const { resources, recipes, categories, machines, setCategories, setResources, setRecipes, setMachines, addRecipe, addResource, updateResource, deleteResource, addCategory, updateCategory, deleteCategory, addMachine, updateMachine, deleteMachine } = useModpack();
   const { t } = useI18n();
+  const { theme } = useTheme();
   
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -74,7 +76,7 @@ function MainLayout() {
   };
 
   return (
-    <div className="flex h-screen w-screen bg-zinc-950 text-zinc-100 font-sans">
+    <div className="flex h-screen w-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans transition-colors duration-300">
       <Sidebar 
         onDefineRecipe={() => { setEditingRecipeId(null); setIsRecipeModalOpen(true); }}
         onEditRecipe={handleEditRecipe}
@@ -91,15 +93,20 @@ function MainLayout() {
           onNodeClick={(_, node) => setSelectedNodeId(node.id)} 
           onPaneClick={() => setSelectedNodeId(null)} 
           fitView 
-          className="bg-zinc-950"
+          className="bg-zinc-50 dark:bg-zinc-950"
         >
-          <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#3f3f46" />
-          <Controls className="bg-zinc-800 border-zinc-700 text-zinc-300 fill-zinc-300" />
+          <Background 
+            variant={BackgroundVariant.Dots} 
+            gap={20} 
+            size={1} 
+            color={theme === 'dark' ? '#3f3f46' : '#d1d5db'} 
+          />
+          <Controls className="bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-300 fill-zinc-800 dark:fill-zinc-300" />
         </ReactFlow>
         <div className="absolute top-4 left-4 pointer-events-none">
-          <div className="bg-zinc-900/80 backdrop-blur border border-zinc-800 p-2 rounded text-xs text-zinc-400 shadow-xl flex items-center gap-3">
+          <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur border border-zinc-200 dark:border-zinc-800 p-2 rounded text-xs text-zinc-500 dark:text-zinc-400 shadow-xl flex items-center gap-3">
             <span>{resources.length} {t('sidebar.resources')}</span>
-            <span className="w-1 h-1 bg-zinc-700 rounded-full" />
+            <span className="w-1 h-1 bg-zinc-300 dark:bg-zinc-700 rounded-full" />
             <span>{recipes.length} {t('sidebar.recipes')}</span>
           </div>
         </div>
@@ -118,27 +125,27 @@ function MainLayout() {
 
       {isSettingsOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsSettingsOpen(false)} />
-          <div className="relative w-full max-w-4xl bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl flex flex-col max-h-[90vh]">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
+          <div className="absolute inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm" onClick={() => setIsSettingsOpen(false)} />
+          <div className="relative w-full max-w-4xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800">
               <div className="flex items-center gap-4">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <h2 className="text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
                   <Database className="text-blue-500" size={20} /> {t('management.title')}
                 </h2>
-                <div className="h-6 w-px bg-zinc-800" />
+                <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800" />
                 <div className="flex items-center gap-2">
-                  <button onClick={handleExport} className="p-1.5 text-zinc-400 hover:text-white flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider">
+                  <button onClick={handleExport} className="p-1.5 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider">
                     <Download size={14} /> {t('common.export')}
                   </button>
-                  <label className="p-1.5 text-zinc-400 hover:text-white flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider cursor-pointer">
+                  <label className="p-1.5 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider cursor-pointer">
                     <Upload size={14} /> {t('common.import')}
                     <input type="file" onChange={handleImport} accept=".json" className="hidden" />
                   </label>
                 </div>
               </div>
-              <button onClick={() => setIsSettingsOpen(false)} className="p-2 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors"><X size={20} /></button>
+              <button onClick={() => setIsSettingsOpen(false)} className="p-2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"><X size={20} /></button>
             </div>
-            <div className="flex-1 p-6 bg-zinc-950 overflow-hidden">
+            <div className="flex-1 p-6 bg-zinc-50 dark:bg-zinc-950 overflow-auto">
               <ResourceLibrary 
                 resources={resources} categories={categories} machines={machines}
                 onAddResource={addResource} onUpdateResource={updateResource} onDeleteResource={deleteResource}
@@ -160,10 +167,12 @@ export default function App() {
   };
 
   return (
-    <ModpackProvider>
-      <I18nContext.Provider value={{ locale, setLocale, t }}>
-        <MainLayout />
-      </I18nContext.Provider>
-    </ModpackProvider>
+    <ThemeProvider>
+      <ModpackProvider>
+        <I18nContext.Provider value={{ locale, setLocale, t }}>
+          <MainLayout />
+        </I18nContext.Provider>
+      </ModpackProvider>
+    </ThemeProvider>
   );
 }

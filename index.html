@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -5,22 +6,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Modpack Architect</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+      }
+    </script>
     <link href="https://cdn.jsdelivr.net/npm/reactflow@11.11.4/dist/style.css" rel="stylesheet" />
     <style>
-      /* Custom Scrollbar for a technical feel */
+      :root {
+        --node-bg: #ffffff;
+        --node-text: #18181b;
+        --edge-stroke: #94a3b8;
+      }
+      .dark {
+        --node-bg: #18181b;
+        --node-text: #ffffff;
+        --edge-stroke: #52525b;
+      }
+
+      /* Custom Scrollbar */
       ::-webkit-scrollbar {
         width: 8px;
         height: 8px;
       }
       ::-webkit-scrollbar-track {
+        background: transparent; 
+      }
+      .dark ::-webkit-scrollbar-track {
         background: #1e1e1e; 
       }
       ::-webkit-scrollbar-thumb {
-        background: #4b5563; 
+        background: #d1d5db; 
         border-radius: 4px;
       }
+      .dark ::-webkit-scrollbar-thumb {
+        background: #4b5563; 
+      }
       ::-webkit-scrollbar-thumb:hover {
+        background: #9ca3af; 
+      }
+      .dark ::-webkit-scrollbar-thumb:hover {
         background: #6b7280; 
+      }
+
+      /* React Flow Controls Fix */
+      .react-flow__controls {
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+      }
+      .dark .react-flow__controls button {
+        background-color: #18181b;
+        fill: #a1a1aa;
+        border-bottom: 1px solid #27272a;
+        color: #a1a1aa;
+      }
+      .dark .react-flow__controls button:hover {
+        background-color: #27272a;
+        fill: #f4f4f5;
+      }
+      .dark .react-flow__controls button path {
+        fill: currentColor;
       }
     </style>
   <script type="importmap">
@@ -37,7 +81,7 @@
 }
 </script>
 </head>
-  <body class="bg-zinc-950 text-zinc-100 overflow-hidden">
+  <body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 overflow-hidden transition-colors duration-300">
     <div id="root"></div>
   </body>
 </html>

@@ -32,18 +32,17 @@ export const buildGraph = (resources: Resource[], recipes: Recipe[]) => {
           id: edgeId,
           source: input.resourceId,
           target: output.resourceId,
-          // Remove labels to clean up the graph as per "去掉配方名显示"
           animated: true,
           style: { 
-            stroke: '#52525b', 
+            stroke: 'var(--edge-stroke)', 
             strokeWidth: 2,
-            strokeDasharray: '8,4', // Dashed line for transport feel
+            strokeDasharray: '8,4', 
           },
           markerEnd: {
             type: MarkerType.ArrowClosed,
             width: 15,
             height: 15,
-            color: '#52525b',
+            color: 'var(--edge-stroke)',
           },
         });
 
@@ -83,8 +82,8 @@ export const buildGraph = (resources: Resource[], recipes: Recipe[]) => {
         targetPosition: Position.Left,
         sourcePosition: Position.Right,
         style: {
-          background: '#18181b',
-          color: '#fff',
+          background: 'var(--node-bg)',
+          color: 'var(--node-text)',
           border: `4px solid ${borderColor}`,
           borderRadius: '16px',
           width: NODE_SIZE,
@@ -93,11 +92,11 @@ export const buildGraph = (resources: Resource[], recipes: Recipe[]) => {
           alignItems: 'center',
           justifyContent: 'center',
           textAlign: 'center',
-          fontSize: '16px',
+          fontSize: '14px',
           lineHeight: '1.1',
           padding: '8px',
           fontWeight: 900,
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4)',
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
         },
       });
     }
