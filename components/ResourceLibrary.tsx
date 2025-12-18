@@ -21,6 +21,25 @@ interface ResourceLibraryProps {
   onDeleteMachine: (id: string) => void;
 }
 
+const ModalOverlay = ({ children, title, icon: Icon, onClose }: { children: React.ReactNode, title: string, icon: any, onClose: () => void }) => (
+  <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+    <div className="absolute inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm" onClick={onClose} />
+    <div className="relative w-full max-w-2xl bg-white dark:bg-[#1a1a1c] border border-zinc-200 dark:border-zinc-800 rounded-[1.5rem] shadow-2xl flex flex-col max-h-[95vh] overflow-hidden">
+      <div className="flex items-center justify-between px-8 py-5 border-b border-zinc-100 dark:border-zinc-800 bg-white dark:bg-[#1a1a1c]">
+        <h3 className="text-[13px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest flex items-center gap-3">
+          <Icon size={16} /> {title}
+        </h3>
+        <button onClick={onClose} className="p-2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
+          <X size={20} />
+        </button>
+      </div>
+      <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
+        {children}
+      </div>
+    </div>
+  </div>
+);
+
 const ResourceLibrary: React.FC<ResourceLibraryProps> = ({ 
   resources, categories, machines,
   onAddResource, onUpdateResource, onDeleteResource,
@@ -164,25 +183,6 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
     );
   }, [machines, macSearch]);
 
-  const ModalOverlay = ({ children, title, icon: Icon, onClose }: { children: React.ReactNode, title: string, icon: any, onClose: () => void }) => (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="absolute inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-2xl bg-white dark:bg-[#1a1a1c] border border-zinc-200 dark:border-zinc-800 rounded-[1.5rem] shadow-2xl flex flex-col max-h-[95vh] overflow-hidden">
-        <div className="flex items-center justify-between px-8 py-5 border-b border-zinc-100 dark:border-zinc-800 bg-white dark:bg-[#1a1a1c]">
-          <h3 className="text-[13px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest flex items-center gap-3">
-            <Icon size={16} /> {title}
-          </h3>
-          <button onClick={onClose} className="p-2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
-            <X size={20} />
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
-          {children}
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <div className="flex border-b border-zinc-200 dark:border-zinc-800 mb-8 shrink-0">
@@ -211,7 +211,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
                   value={resSearch} 
                   onChange={(e) => setResSearch(e.target.value)} 
                   placeholder={t('sidebar.searchPlaceholder')} 
-                  className="w-full bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl py-3 pl-11 pr-4 text-sm text-zinc-800 dark:text-zinc-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none h-[48px] placeholder:text-zinc-300 dark:placeholder:text-zinc-700" 
+                  className="w-full bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl py-3 pl-11 pr-4 text-sm text-zinc-800 dark:text-zinc-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none h-[48px] placeholder:text-zinc-300 dark:placeholder:text-zinc-700 font-bold" 
                 />
               </div>
               <div className="flex items-center gap-4">
@@ -219,7 +219,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
                 <select 
                   value={resFilterCat} 
                   onChange={(e) => setResFilterCat(e.target.value)} 
-                  className="bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-xs text-zinc-700 dark:text-zinc-300 font-black uppercase tracking-widest outline-none h-[48px]"
+                  className="bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-xs text-zinc-700 dark:text-zinc-300 font-black uppercase tracking-widest outline-none h-[48px] font-bold"
                 >
                   <option value="all">{t('sidebar.allCategories').toUpperCase()}</option>
                   {categories.map(c => <option key={c.id} value={c.id}>{c.name.toUpperCase()}</option>)}
@@ -265,7 +265,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
                   value={catSearch} 
                   onChange={(e) => setCatSearch(e.target.value)} 
                   placeholder={t('sidebar.searchPlaceholder')} 
-                  className="w-full bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl py-3 pl-11 pr-4 text-sm text-zinc-800 dark:text-zinc-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none h-[48px] placeholder:text-zinc-300 dark:placeholder:text-zinc-700" 
+                  className="w-full bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl py-3 pl-11 pr-4 text-sm text-zinc-800 dark:text-zinc-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none h-[48px] placeholder:text-zinc-300 dark:placeholder:text-zinc-700 font-bold" 
                 />
               </div>
               <button 
@@ -308,7 +308,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
                   value={macSearch} 
                   onChange={(e) => setMacSearch(e.target.value)} 
                   placeholder={t('sidebar.searchPlaceholder')} 
-                  className="w-full bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl py-3 pl-11 pr-4 text-sm text-zinc-800 dark:text-zinc-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none h-[48px] placeholder:text-zinc-300 dark:placeholder:text-zinc-700" 
+                  className="w-full bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl py-3 pl-11 pr-4 text-sm text-zinc-800 dark:text-zinc-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none h-[48px] placeholder:text-zinc-300 dark:placeholder:text-zinc-700 font-bold" 
                 />
               </div>
               <button 
@@ -377,17 +377,17 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
 
                 <div className="space-y-2">
                   <label className="block text-[11px] text-zinc-400 dark:text-zinc-500 uppercase font-black ml-2 tracking-widest">SERVER URL</label>
-                  <input type="text" value={syncSettings.apiUrl} onChange={(e) => setSyncSettings({...syncSettings, apiUrl: e.target.value})} placeholder="wss://your-architect-server.com/api/v1/live" className="w-full bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl px-5 py-3 text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none h-[48px] shadow-sm" />
+                  <input type="text" value={syncSettings.apiUrl} onChange={(e) => setSyncSettings({...syncSettings, apiUrl: e.target.value})} placeholder="wss://your-architect-server.com/api/v1/live" className="w-full bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl px-5 py-3 text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none h-[48px] shadow-sm font-bold" />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="block text-[11px] text-zinc-400 dark:text-zinc-500 uppercase font-black ml-2 tracking-widest">{t('management.sync.username')}</label>
-                    <input type="text" value={syncSettings.username} onChange={(e) => setSyncSettings({...syncSettings, username: e.target.value})} className="w-full bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl px-5 py-3 text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none h-[48px] shadow-sm" />
+                    <input type="text" value={syncSettings.username} onChange={(e) => setSyncSettings({...syncSettings, username: e.target.value})} className="w-full bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl px-5 py-3 text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none h-[48px] shadow-sm font-bold" />
                   </div>
                   <div className="space-y-2">
                     <label className="block text-[11px] text-zinc-400 dark:text-zinc-500 uppercase font-black ml-2 tracking-widest">{t('management.sync.password')}</label>
-                    <input type="password" value={syncSettings.password} onChange={(e) => setSyncSettings({...syncSettings, password: e.target.value})} className="w-full bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl px-5 py-3 text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none h-[48px] shadow-sm" />
+                    <input type="password" value={syncSettings.password} onChange={(e) => setSyncSettings({...syncSettings, password: e.target.value})} className="w-full bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl px-5 py-3 text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none h-[48px] shadow-sm font-bold" />
                   </div>
                 </div>
 
@@ -412,7 +412,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="block text-[11px] text-zinc-400 dark:text-zinc-500 uppercase font-black ml-1 tracking-widest">{t('management.displayName')}</label>
-                <input type="text" required value={resName} onChange={(e) => setResName(e.target.value)} placeholder="e.g. Iron Ingot" className="w-full bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none h-[48px]" />
+                <input type="text" required value={resName} onChange={(e) => setResName(e.target.value)} placeholder="e.g. Iron Ingot" className="w-full bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none h-[48px] font-bold" />
               </div>
               <div className="space-y-2">
                 <label className="block text-[11px] text-zinc-400 dark:text-zinc-500 uppercase font-black ml-1 tracking-widest">ID</label>
@@ -421,8 +421,8 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
             </div>
             <div className="space-y-2">
               <label className="block text-[11px] text-zinc-400 dark:text-zinc-500 uppercase font-black ml-1 tracking-widest">{t('common.category')}</label>
-              <div className="flex gap-4">
-                <select value={resType} onChange={(e) => setResType(e.target.value)} className="flex-1 bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none h-[48px]">
+              <div className="flex gap-4 items-end">
+                <select value={resType} onChange={(e) => setResType(e.target.value)} className="flex-1 bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none h-[48px] font-bold cursor-pointer">
                   {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                 </select>
                 <button type="submit" className="px-8 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-[0.98] h-[48px]">
@@ -445,7 +445,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="block text-[11px] text-zinc-400 dark:text-zinc-500 uppercase font-black ml-1 tracking-widest">{t('common.name')}</label>
-                <input type="text" required value={catName} onChange={(e) => setCatName(e.target.value)} placeholder="e.g. Items" className="w-full bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none h-[48px]" />
+                <input type="text" required value={catName} onChange={(e) => setCatName(e.target.value)} placeholder="e.g. Items" className="w-full bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none h-[48px] font-bold" />
               </div>
               <div className="space-y-2">
                 <label className="block text-[11px] text-zinc-400 dark:text-zinc-500 uppercase font-black ml-1 tracking-widest">ID</label>
@@ -466,7 +466,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
               <div className="space-y-2">
                 <label className="block text-[11px] text-zinc-400 dark:text-zinc-500 uppercase font-black ml-1 tracking-widest">{t('management.color')}</label>
                 <div className="relative flex items-center h-[48px] gap-2">
-                   <input type="text" value={catColor} onChange={(e) => setCatColor(e.target.value)} className="flex-1 bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm font-mono text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 h-full" />
+                   <input type="text" value={catColor} onChange={(e) => setCatColor(e.target.value)} className="flex-1 bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm font-mono text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 h-full font-bold" />
                    <div className="w-10 h-full flex items-center justify-center shrink-0 relative">
                       <div className="w-7 h-7 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm" style={{ backgroundColor: catColor }} />
                       <input type="color" value={catColor} onChange={(e) => setCatColor(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
@@ -492,7 +492,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="block text-[11px] text-zinc-400 dark:text-zinc-500 uppercase font-black ml-1 tracking-widest">{t('management.displayName')}</label>
-                <input type="text" required value={macName} onChange={(e) => setMacName(e.target.value)} placeholder="e.g. Arc Furnace" className="w-full bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none h-[48px]" />
+                <input type="text" required value={macName} onChange={(e) => setMacName(e.target.value)} placeholder="e.g. Arc Furnace" className="w-full bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none h-[48px] font-bold" />
               </div>
               <div className="space-y-2">
                 <label className="block text-[11px] text-zinc-400 dark:text-zinc-500 uppercase font-black ml-1 tracking-widest">ID</label>
@@ -501,41 +501,43 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
             </div>
             <div className="space-y-2">
               <label className="block text-[11px] text-zinc-400 dark:text-zinc-500 uppercase font-black ml-1 tracking-widest">{t('common.description')}</label>
-              <textarea value={macDesc} onChange={(e) => setMacDesc(e.target.value)} className="w-full bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none h-20" />
+              <textarea value={macDesc} onChange={(e) => setMacDesc(e.target.value)} className="w-full bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none h-20 font-medium" />
             </div>
             <div className="grid grid-cols-2 gap-8 pt-4">
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/50 pb-1">
                     <label className="text-[11px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-widest">INPUT SLOTS</label>
-                    <button type="button" onClick={() => addSlot('input')} className="text-[10px] font-black text-emerald-600 hover:text-emerald-500">+ ADD</button>
+                    <button type="button" onClick={() => addSlot('input')} className="text-[10px] font-black text-emerald-600 hover:text-emerald-500 transition-colors bg-emerald-500/10 px-2 py-0.5 rounded">+ ADD</button>
                 </div>
                 <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
                     {macInputs.map((slot, idx) => (
                         <div key={idx} className="flex items-center gap-2 p-2 bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl">
                             <input type="text" value={slot.label} onChange={(e) => updateSlot('input', idx, 'label', e.target.value)} className="flex-1 bg-transparent border-none text-xs text-zinc-700 dark:text-zinc-200 outline-none font-bold" placeholder="Label" />
-                            <select value={slot.type} onChange={(e) => updateSlot('input', idx, 'type', e.target.value)} className="bg-transparent border-none text-[10px] font-black uppercase text-zinc-500 outline-none">
+                            <select value={slot.type} onChange={(e) => updateSlot('input', idx, 'type', e.target.value)} className="bg-transparent border-none text-[10px] font-black uppercase text-zinc-500 outline-none cursor-pointer">
                                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                             </select>
                             <button type="button" onClick={() => removeSlot('input', idx)} className="text-zinc-400 hover:text-red-500"><X size={14}/></button>
                         </div>
                     ))}
+                    {macInputs.length === 0 && <div className="text-center py-4 text-zinc-400 text-[10px] uppercase tracking-widest border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl opacity-50">Empty</div>}
                 </div>
               </div>
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/50 pb-1">
                     <label className="text-[11px] font-black text-orange-600 dark:text-orange-500 uppercase tracking-widest">OUTPUT SLOTS</label>
-                    <button type="button" onClick={() => addSlot('output')} className="text-[10px] font-black text-orange-600 hover:text-orange-500">+ ADD</button>
+                    <button type="button" onClick={() => addSlot('output')} className="text-[10px] font-black text-orange-600 hover:text-orange-500 transition-colors bg-orange-500/10 px-2 py-0.5 rounded">+ ADD</button>
                 </div>
                 <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
                     {macOutputs.map((slot, idx) => (
                         <div key={idx} className="flex items-center gap-2 p-2 bg-zinc-50 dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-800 rounded-xl">
                             <input type="text" value={slot.label} onChange={(e) => updateSlot('output', idx, 'label', e.target.value)} className="flex-1 bg-transparent border-none text-xs text-zinc-700 dark:text-zinc-200 outline-none font-bold" placeholder="Label" />
-                            <select value={slot.type} onChange={(e) => updateSlot('output', idx, 'type', e.target.value)} className="bg-transparent border-none text-[10px] font-black uppercase text-zinc-500 outline-none">
+                            <select value={slot.type} onChange={(e) => updateSlot('output', idx, 'type', e.target.value)} className="bg-transparent border-none text-[10px] font-black uppercase text-zinc-500 outline-none cursor-pointer">
                                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                             </select>
                             <button type="button" onClick={() => removeSlot('output', idx)} className="text-zinc-400 hover:text-red-500"><X size={14}/></button>
                         </div>
                     ))}
+                    {macOutputs.length === 0 && <div className="text-center py-4 text-zinc-400 text-[10px] uppercase tracking-widest border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl opacity-50">Empty</div>}
                 </div>
               </div>
             </div>
