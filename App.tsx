@@ -407,7 +407,7 @@ export default function App() {
                   <X size={20} />
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto p-6 bg-zinc-950">
+              <div className="flex-1 p-6 bg-zinc-950">
                 <ResourceLibrary 
                   resources={resources} 
                   categories={categories}

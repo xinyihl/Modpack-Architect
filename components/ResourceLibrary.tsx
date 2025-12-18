@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Plus, Trash2, Edit2, Box, Droplets, Zap, Wind, Star, Tag, Cpu, X, Settings2 } from 'lucide-react';
+import { Plus, Trash2, Edit2, Box, Droplets, Zap, Wind, Star, Tag, Cpu, X, Settings2, Search, Filter } from 'lucide-react';
 import { Resource, ResourceCategory, ResourceType, MachineDefinition, MachineSlot } from '../types';
 import { useI18n } from '../App';
 
@@ -27,6 +27,10 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
 }) => {
   const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<'resources' | 'categories' | 'machines'>('resources');
+
+  // Filtering states
+  const [resSearch, setResSearch] = useState('');
+  const [resFilterCat, setResFilterCat] = useState('all');
 
   // Editing states
   const [editingResourceId, setEditingResourceId] = useState<string | null>(null);
@@ -122,6 +126,15 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
     }
   };
 
+  const filteredResources = useMemo(() => {
+    return resources.filter(res => {
+      const matchesSearch = res.name.toLowerCase().includes(resSearch.toLowerCase()) || 
+                           res.id.toLowerCase().includes(resSearch.toLowerCase());
+      const matchesCategory = resFilterCat === 'all' || res.type === resFilterCat;
+      return matchesSearch && matchesCategory;
+    });
+  }, [resources, resSearch, resFilterCat]);
+
   return (
     <div className="space-y-6">
       <div className="flex border-b border-zinc-800">
@@ -164,25 +177,57 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
               </button>
             </div>
           </form>
+
+          {/* Filtering Section */}
+          <div className="flex flex-col sm:flex-row gap-3 items-center bg-zinc-900/30 p-2 rounded-lg border border-zinc-800/50">
+            <div className="relative flex-1 w-full">
+              <Search size={14} className="absolute left-2.5 top-2.5 text-zinc-600" />
+              <input 
+                type="text" 
+                value={resSearch}
+                onChange={(e) => setResSearch(e.target.value)}
+                placeholder={t('sidebar.searchPlaceholder')}
+                className="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg py-1.5 pl-8 pr-3 text-xs focus:ring-1 focus:ring-blue-500 outline-none placeholder:text-zinc-700"
+              />
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Filter size={12} className="text-zinc-600" />
+              <select 
+                value={resFilterCat}
+                onChange={(e) => setResFilterCat(e.target.value)}
+                className="bg-zinc-950/50 border border-zinc-800 rounded-lg px-2 py-1.5 text-[10px] text-zinc-400 focus:ring-1 focus:ring-blue-500 outline-none font-bold uppercase tracking-tighter"
+              >
+                <option value="all">ALL CATEGORIES</option>
+                {categories.map(c => <option key={c.id} value={c.id}>{c.name.toUpperCase()}</option>)}
+              </select>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 gap-2 max-h-[400px] overflow-y-auto pr-1">
-            {resources.map((res) => {
-              const cat = categories.find(c => c.id === res.type);
-              return (
-                <div key={res.id} className="flex items-center justify-between p-3 bg-zinc-900 border border-zinc-800 rounded group hover:border-zinc-700 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-zinc-800 rounded">{getIcon(cat?.iconType || 'box', cat?.color || '#52525b')}</div>
-                    <div>
-                      <div className="text-sm font-medium text-zinc-200">{res.name}</div>
-                      <div className="text-[10px] font-mono text-zinc-500">{res.id} • {cat?.name}</div>
+            {filteredResources.length > 0 ? (
+              filteredResources.map((res) => {
+                const cat = categories.find(c => c.id === res.type);
+                return (
+                  <div key={res.id} className="flex items-center justify-between p-3 bg-zinc-900 border border-zinc-800 rounded group hover:border-zinc-700 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-zinc-800 rounded">{getIcon(cat?.iconType || 'box', cat?.color || '#52525b')}</div>
+                      <div>
+                        <div className="text-sm font-medium text-zinc-200">{res.name}</div>
+                        <div className="text-[10px] font-mono text-zinc-500">{res.id} • {cat?.name}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => startEditResource(res)} className="p-2 text-zinc-500 hover:text-blue-400"><Edit2 size={16} /></button>
+                      <button onClick={() => onDeleteResource(res.id)} className="p-2 text-zinc-500 hover:text-red-400"><Trash2 size={16} /></button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => startEditResource(res)} className="p-2 text-zinc-500 hover:text-blue-400"><Edit2 size={16} /></button>
-                    <button onClick={() => onDeleteResource(res.id)} className="p-2 text-zinc-500 hover:text-red-400"><Trash2 size={16} /></button>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            ) : (
+              <div className="text-center py-12 text-zinc-600 italic text-sm border-2 border-dashed border-zinc-900 rounded-xl">
+                {t('common.noResults')}
+              </div>
+            )}
           </div>
         </div>
       )}
