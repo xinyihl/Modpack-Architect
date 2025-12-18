@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 import { Resource, Recipe, ResourceCategory, MachineDefinition, SyncSettings, SyncStatus, ModpackData } from '../types';
 import { INITIAL_MACHINES } from '../constants/machines';
 import { useNotifications } from './NotificationContext';
+import { getAllFromStore, saveToStore, deleteFromStore, clearStore } from '../utils/db';
 
 interface ModpackContextType {
   categories: ResourceCategory[];
@@ -46,11 +47,13 @@ const INITIAL_RESOURCES: Resource[] = [
 
 export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { showNotification } = useNotifications();
-  const [categories, setCategories] = useState<ResourceCategory[]>(INITIAL_CATEGORIES);
-  const [resources, setResources] = useState<Resource[]>(INITIAL_RESOURCES);
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [machines, setMachines] = useState<MachineDefinition[]>(INITIAL_MACHINES);
+  const [categories, setCategoriesState] = useState<ResourceCategory[]>(INITIAL_CATEGORIES);
+  const [resources, setResourcesState] = useState<Resource[]>(INITIAL_RESOURCES);
+  const [recipes, setRecipesState] = useState<Recipe[]>([]);
+  const [machines, setMachinesState] = useState<MachineDefinition[]>(INITIAL_MACHINES);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
+  const [isInitialized, setIsInitialized] = useState(false);
+
   const [syncSettings, setSyncSettings] = useState<SyncSettings>(() => {
     const saved = localStorage.getItem('sync_settings');
     return saved ? JSON.parse(saved) : {
@@ -65,7 +68,45 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const ws = useRef<WebSocket | null>(null);
   const isInternalChange = useRef(false);
 
-  // Capture current state for broadcast
+  // Load from IndexedDB on startup
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [dbCats, dbRes, dbRecs, dbMacs] = await Promise.all([
+          getAllFromStore<ResourceCategory>('categories'),
+          getAllFromStore<Resource>('resources'),
+          getAllFromStore<Recipe>('recipes'),
+          getAllFromStore<MachineDefinition>('machines'),
+        ]);
+
+        if (dbCats.length > 0) setCategoriesState(dbCats);
+        else {
+          // Seed initial categories if DB is empty
+          for (const cat of INITIAL_CATEGORIES) await saveToStore('categories', cat);
+        }
+
+        if (dbRes.length > 0) setResourcesState(dbRes);
+        else {
+          for (const res of INITIAL_RESOURCES) await saveToStore('resources', res);
+        }
+
+        if (dbMacs.length > 0) setMachinesState(dbMacs);
+        else {
+          for (const mac of INITIAL_MACHINES) await saveToStore('machines', mac);
+        }
+
+        if (dbRecs.length > 0) setRecipesState(dbRecs);
+
+        setIsInitialized(true);
+      } catch (error) {
+        console.error('Failed to load data from IndexedDB', error);
+        setIsInitialized(true); // Proceed anyway with defaults
+      }
+    };
+
+    loadData();
+  }, []);
+
   const broadcastState = useCallback((data: ModpackData) => {
     const socket = ws.current;
     if (socket && socket.readyState === WebSocket.OPEN) {
@@ -78,17 +119,36 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [syncSettings.username]);
 
-  // Use current values if no data is passed (for manual trigger)
   const triggerSync = useCallback(() => {
     broadcastState({ categories, resources, recipes, machines });
   }, [broadcastState, categories, resources, recipes, machines]);
 
-  // Handle local state updates and broadcast
   const wrapUpdate = useCallback((data: ModpackData) => {
     if (!isInternalChange.current) {
       broadcastState(data);
     }
   }, [broadcastState]);
+
+  // Bulk update helpers for imports/sync
+  const setCategories = useCallback((cats: ResourceCategory[]) => {
+    setCategoriesState(cats);
+    clearStore('categories').then(() => cats.forEach(c => saveToStore('categories', c)));
+  }, []);
+
+  const setResources = useCallback((res: Resource[]) => {
+    setResourcesState(res);
+    clearStore('resources').then(() => res.forEach(r => saveToStore('resources', r)));
+  }, []);
+
+  const setRecipes = useCallback((recs: Recipe[]) => {
+    setRecipesState(recs);
+    clearStore('recipes').then(() => recs.forEach(r => saveToStore('recipes', r)));
+  }, []);
+
+  const setMachines = useCallback((macs: MachineDefinition[]) => {
+    setMachinesState(macs);
+    clearStore('machines').then(() => macs.forEach(m => saveToStore('machines', m)));
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('sync_settings', JSON.stringify(syncSettings));
@@ -131,7 +191,6 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 setResources(remote.resources);
                 setRecipes(remote.recipes);
                 setMachines(remote.machines);
-                // Allow a small window for the state updates to settle before enabling broadcasts again
                 setTimeout(() => { isInternalChange.current = false; }, 100);
               }
             } catch (e) {
@@ -172,75 +231,90 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
         ws.current = null;
       }
     }
-  }, [syncSettings.enabled, syncSettings.apiUrl, syncSettings.username, syncSettings.password, showNotification]);
+  }, [syncSettings.enabled, syncSettings.apiUrl, syncSettings.username, syncSettings.password, showNotification, setCategories, setResources, setRecipes, setMachines]);
 
-  // Operations wrapped with broadcast logic
-  const addResource = (res: Resource) => setResources(prev => {
+  // Operations
+  const addResource = (res: Resource) => setResourcesState(prev => {
     const next = [...prev, res];
+    saveToStore('resources', res);
     wrapUpdate({ categories, resources: next, recipes, machines });
     return next;
   });
 
-  const updateResource = (res: Resource) => setResources(prev => {
+  const updateResource = (res: Resource) => setResourcesState(prev => {
     const next = prev.map(r => r.id === res.id ? res : r);
+    saveToStore('resources', res);
     wrapUpdate({ categories, resources: next, recipes, machines });
     return next;
   });
 
-  const deleteResource = (id: string) => setResources(prev => {
+  const deleteResource = (id: string) => setResourcesState(prev => {
     const next = prev.filter(r => r.id !== id);
+    deleteFromStore('resources', id);
     wrapUpdate({ categories, resources: next, recipes, machines });
     return next;
   });
 
-  const addRecipe = (recipe: Recipe) => setRecipes(prev => {
+  const addRecipe = (recipe: Recipe) => setRecipesState(prev => {
     const idx = prev.findIndex(r => r.id === recipe.id);
     const next = idx >= 0 ? prev.map((r, i) => i === idx ? recipe : r) : [...prev, recipe];
+    saveToStore('recipes', recipe);
     wrapUpdate({ categories, resources, recipes: next, machines });
     return next;
   });
 
-  const deleteRecipe = (id: string) => setRecipes(prev => {
+  const deleteRecipe = (id: string) => setRecipesState(prev => {
     const next = prev.filter(r => r.id !== id);
+    deleteFromStore('recipes', id);
     wrapUpdate({ categories, resources, recipes: next, machines });
     return next;
   });
 
-  const addCategory = (cat: ResourceCategory) => setCategories(prev => {
+  const addCategory = (cat: ResourceCategory) => setCategoriesState(prev => {
     const next = [...prev, cat];
+    saveToStore('categories', cat);
     wrapUpdate({ categories: next, resources, recipes, machines });
     return next;
   });
 
-  const updateCategory = (cat: ResourceCategory) => setCategories(prev => {
+  const updateCategory = (cat: ResourceCategory) => setCategoriesState(prev => {
     const next = prev.map(c => c.id === cat.id ? cat : c);
+    saveToStore('categories', cat);
     wrapUpdate({ categories: next, resources, recipes, machines });
     return next;
   });
 
-  const deleteCategory = (id: string) => setCategories(prev => {
+  const deleteCategory = (id: string) => setCategoriesState(prev => {
     const next = prev.filter(c => c.id !== id);
+    deleteFromStore('categories', id);
     wrapUpdate({ categories: next, resources, recipes, machines });
     return next;
   });
 
-  const addMachine = (m: MachineDefinition) => setMachines(prev => {
+  const addMachine = (m: MachineDefinition) => setMachinesState(prev => {
     const next = [...prev, m];
+    saveToStore('machines', m);
     wrapUpdate({ categories, resources, recipes, machines: next });
     return next;
   });
 
-  const updateMachine = (m: MachineDefinition) => setMachines(prev => {
+  const updateMachine = (m: MachineDefinition) => setMachinesState(prev => {
     const next = prev.map(old => old.id === m.id ? m : old);
+    saveToStore('machines', m);
     wrapUpdate({ categories, resources, recipes, machines: next });
     return next;
   });
 
-  const deleteMachine = (id: string) => setMachines(prev => {
+  const deleteMachine = (id: string) => setMachinesState(prev => {
     const next = prev.filter(m => m.id !== id);
+    deleteFromStore('machines', id);
     wrapUpdate({ categories, resources, recipes, machines: next });
     return next;
   });
+
+  if (!isInitialized) {
+    return null; // Or a loading spinner
+  }
 
   return (
     <ModpackContext.Provider value={{
