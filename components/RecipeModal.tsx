@@ -12,9 +12,10 @@ interface RecipeModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (recipe: Recipe) => void;
+  onDelete?: (id: string) => void;
 }
 
-const RecipeModal: React.FC<RecipeModalProps> = ({ resources, machines, editingRecipe, isOpen, onClose, onSave }) => {
+const RecipeModal: React.FC<RecipeModalProps> = ({ resources, machines, editingRecipe, isOpen, onClose, onSave, onDelete }) => {
   const { t } = useI18n();
   const [step, setStep] = useState<'select-machine' | 'config'>('select-machine');
   const [selectedMachineId, setSelectedMachineId] = useState<string | null>(null);
@@ -46,6 +47,13 @@ const RecipeModal: React.FC<RecipeModalProps> = ({ resources, machines, editingR
     } else {
       setStep('select-machine');
       setSelectedMachineId(null);
+    }
+  };
+
+  const handleDelete = (id: string) => {
+    if (onDelete) {
+      onDelete(id);
+      onClose();
     }
   };
 
@@ -89,7 +97,7 @@ const RecipeModal: React.FC<RecipeModalProps> = ({ resources, machines, editingR
           )}
           {step === 'config' && selectedMachine && (
             <div className="animate-in fade-in slide-in-from-right-2 duration-300">
-              <RecipeForm resources={resources} machine={selectedMachine} initialRecipe={editingRecipe} onSave={onSave} onCancel={handleReset} />
+              <RecipeForm resources={resources} machine={selectedMachine} initialRecipe={editingRecipe} onSave={onSave} onCancel={handleReset} onDelete={handleDelete} />
             </div>
           )}
         </div>

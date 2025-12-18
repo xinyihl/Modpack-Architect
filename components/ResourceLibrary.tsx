@@ -191,7 +191,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
                 onChange={(e) => setResFilterCat(e.target.value)}
                 className="bg-white dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2 py-1.5 text-[10px] text-zinc-500 dark:text-zinc-400 focus:ring-1 focus:ring-blue-500 outline-none font-bold uppercase tracking-tighter"
               >
-                <option value="all">ALL CATEGORIES</option>
+                <option value="all">{t('sidebar.allCategories').toUpperCase()}</option>
                 {categories.map(c => <option key={c.id} value={c.id}>{c.name.toUpperCase()}</option>)}
               </select>
             </div>

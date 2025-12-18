@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Save, AlertCircle, Search, X } from 'lucide-react';
+import { Save, AlertCircle, Search, X, Trash2 } from 'lucide-react';
 import { Recipe, Resource, ResourceStack, MachineDefinition, MachineSlot } from '../types';
 import { useI18n } from '../App';
 
@@ -10,9 +10,10 @@ interface RecipeFormProps {
   initialRecipe?: Recipe | null;
   onSave: (recipe: Recipe) => void;
   onCancel: () => void;
+  onDelete?: (id: string) => void;
 }
 
-const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialRecipe, onSave, onCancel }) => {
+const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialRecipe, onSave, onCancel, onDelete }) => {
   const { t } = useI18n();
   const [name, setName] = useState('');
   const [duration, setDuration] = useState<number>(100);
@@ -285,7 +286,21 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
         </div>
       </div>
 
-      <div className="flex justify-end items-center gap-6 pt-4 border-t border-zinc-100 dark:border-zinc-800/60 mt-4">
+      <div className="flex items-center gap-6 pt-4 border-t border-zinc-100 dark:border-zinc-800/60 mt-4">
+        {initialRecipe && onDelete && (
+          <button
+            type="button"
+            onClick={() => {
+              if (confirm(t('common.confirmDelete'))) {
+                onDelete(initialRecipe.id);
+              }
+            }}
+            className="text-sm font-bold text-red-500 hover:text-red-400 transition-colors px-2 mr-auto flex items-center gap-1.5 group"
+          >
+            <Trash2 size={16} className="group-hover:scale-110 transition-transform" /> {t('common.delete')}
+          </button>
+        )}
+        <div className="flex-1" />
         <button
           type="button"
           onClick={onCancel}

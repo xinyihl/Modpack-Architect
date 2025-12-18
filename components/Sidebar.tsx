@@ -81,7 +81,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDefineRecipe, onEditRecipe, onOpenS
               onChange={(e) => setMachineFilter(e.target.value)}
               className="flex-1 bg-zinc-100 dark:bg-zinc-800 border-none rounded py-1 px-3 text-[10px] font-bold uppercase text-zinc-500 dark:text-zinc-400 focus:ring-1 focus:ring-blue-500 outline-none h-7 tracking-tighter"
             >
-              <option value="all">ALL MACHINES</option>
+              <option value="all">{t('sidebar.allMachines').toUpperCase()}</option>
               {machines.map(m => <option key={m.id} value={m.id}>{m.name.toUpperCase()}</option>)}
             </select>
          </div>

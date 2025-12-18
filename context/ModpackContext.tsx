@@ -17,6 +17,7 @@ interface ModpackContextType {
   updateResource: (res: Resource) => void;
   deleteResource: (id: string) => void;
   addRecipe: (recipe: Recipe) => void;
+  deleteRecipe: (id: string) => void;
   addCategory: (cat: ResourceCategory) => void;
   updateCategory: (cat: ResourceCategory) => void;
   deleteCategory: (id: string) => void;
@@ -88,6 +89,8 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return [...prev, recipe];
   });
 
+  const deleteRecipe = (id: string) => setRecipes(prev => prev.filter(r => r.id !== id));
+
   const addCategory = (cat: ResourceCategory) => setCategories(prev => [...prev, cat]);
   const updateCategory = (cat: ResourceCategory) => setCategories(prev => prev.map(c => c.id === cat.id ? cat : c));
   const deleteCategory = (id: string) => setCategories(prev => prev.filter(c => c.id !== id));
@@ -100,7 +103,7 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
     <ModpackContext.Provider value={{
       categories, resources, recipes, machines,
       setCategories, setResources, setRecipes, setMachines,
-      addResource, updateResource, deleteResource, addRecipe,
+      addResource, updateResource, deleteResource, addRecipe, deleteRecipe,
       addCategory, updateCategory, deleteCategory,
       addMachine, updateMachine, deleteMachine
     }}>

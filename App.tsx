@@ -26,7 +26,7 @@ export const useI18n = () => {
 };
 
 function MainLayout() {
-  const { resources, recipes, categories, machines, setCategories, setResources, setRecipes, setMachines, addRecipe, addResource, updateResource, deleteResource, addCategory, updateCategory, deleteCategory, addMachine, updateMachine, deleteMachine } = useModpack();
+  const { resources, recipes, categories, machines, setCategories, setResources, setRecipes, setMachines, addRecipe, deleteRecipe, addResource, updateResource, deleteResource, addCategory, updateCategory, deleteCategory, addMachine, updateMachine, deleteMachine } = useModpack();
   const { t } = useI18n();
   const { theme } = useTheme();
   
@@ -121,6 +121,7 @@ function MainLayout() {
         machines={machines}
         onClose={() => { setIsRecipeModalOpen(false); setEditingRecipeId(null); }} 
         onSave={addRecipe} 
+        onDelete={deleteRecipe}
       />
 
       {isSettingsOpen && (
