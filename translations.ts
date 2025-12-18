@@ -21,6 +21,8 @@ export const translations = {
       loading: "Loading...",
       metadata: "Metadata",
       confirmDelete: "Are you sure? This may affect existing recipes.",
+      import: "Import",
+      export: "Export",
     },
     sidebar: {
       defineRecipe: "Define Recipe",
@@ -92,6 +94,8 @@ export const translations = {
       loading: "加载中...",
       metadata: "元数据",
       confirmDelete: "确定要删除吗？这可能会影响现有的配方。",
+      import: "导入",
+      export: "导出",
     },
     sidebar: {
       defineRecipe: "创建配方",

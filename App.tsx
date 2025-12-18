@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect, createContext, useContext } from 'react';
+import React, { useState, useMemo, useEffect, createContext, useContext, useRef } from 'react';
 import ReactFlow, { 
   Controls, 
   Background, 
@@ -7,7 +7,7 @@ import ReactFlow, {
   useEdgesState, 
   BackgroundVariant
 } from 'reactflow';
-import { Layers, Plus, Database, Settings, Search, Cpu, X, Languages } from 'lucide-react';
+import { Layers, Plus, Database, Settings, Search, Cpu, X, Languages, Download, Upload } from 'lucide-react';
 
 import { Resource, Recipe, ResourceCategory, MachineDefinition } from './types';
 import { buildGraph } from './utils/graphBuilder';
@@ -87,11 +87,12 @@ export default function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
-  const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isRecipeModalOpen, setIsRecipeModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const { nodes: layoutNodes, edges: layoutEdges } = buildGraph(resources, recipes);
@@ -146,6 +147,39 @@ export default function App() {
     setMachines(prev => prev.filter(m => m.id !== id));
   };
 
+  const handleExport = () => {
+    const data = { categories, resources, recipes, machines };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `modpack_architect_backup_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target?.result as string);
+        if (data.categories) setCategories(data.categories);
+        if (data.resources) setResources(data.resources);
+        if (data.recipes) setRecipes(data.recipes);
+        if (data.machines) setMachines(data.machines);
+        alert('Import successful!');
+      } catch (err) {
+        alert('Failed to parse import file. Please ensure it is a valid Modpack Architect JSON.');
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const editingRecipe = useMemo(() => recipes.find(r => r.id === editingRecipeId) || null, [recipes, editingRecipeId]);
   const selectedResource = useMemo(() => resources.find(r => r.id === selectedNodeId), [resources, selectedNodeId]);
   const relatedRecipes = useMemo(() => {
@@ -159,71 +193,58 @@ export default function App() {
   return (
     <I18nContext.Provider value={{ locale, setLocale, t }}>
       <div className="flex h-screen w-screen bg-zinc-950 text-zinc-100 font-sans">
-        <div className={`flex flex-col border-r border-zinc-800 bg-zinc-900 transition-all duration-300 ${isSidebarOpen ? 'w-80' : 'w-16'}`}>
+        <div className="flex flex-col border-r border-zinc-800 bg-zinc-900 w-80 shrink-0">
           <div className="h-16 flex items-center justify-between px-4 border-b border-zinc-800 shrink-0">
-            {isSidebarOpen ? (
-               <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center font-bold">M</div>
-                  <span className="font-bold tracking-tight uppercase text-sm">Architect</span>
-               </div>
-            ) : (
-              <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center font-bold mx-auto">M</div>
-            )}
+             <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center font-bold">M</div>
+                <span className="font-bold tracking-tight uppercase text-sm">Architect</span>
+             </div>
             <div className="flex items-center gap-1">
-              {isSidebarOpen && (
-                <>
-                  <button 
-                    onClick={() => setLocale(locale === 'en-US' ? 'zh-CN' : 'en-US')}
-                    className="p-2 text-zinc-500 hover:text-white transition-colors flex items-center gap-1"
-                    title="Switch Language"
-                  >
-                    <Languages size={18} />
-                    <span className="text-[10px] font-bold">{locale === 'en-US' ? 'EN' : 'CN'}</span>
-                  </button>
-                  <button onClick={() => setIsSettingsOpen(true)} className="p-2 text-zinc-500 hover:text-white transition-colors" title={t('sidebar.management')}>
-                    <Settings size={18} />
-                  </button>
-                </>
-              )}
-              <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="text-zinc-500 hover:text-white p-2">
-                <Layers size={18} />
+              <button 
+                onClick={() => setLocale(locale === 'en-US' ? 'zh-CN' : 'en-US')}
+                className="p-2 text-zinc-500 hover:text-white transition-colors flex items-center gap-1"
+                title="Switch Language"
+              >
+                <Languages size={18} />
+                <span className="text-[10px] font-bold">{locale === 'en-US' ? 'EN' : 'CN'}</span>
+              </button>
+              <button onClick={() => setIsSettingsOpen(true)} className="p-2 text-zinc-500 hover:text-white transition-colors" title={t('sidebar.management')}>
+                <Settings size={18} />
               </button>
             </div>
           </div>
 
-          {isSidebarOpen && (
-            <div className="flex-1 overflow-hidden flex flex-col">
-              <div className="p-4 shrink-0">
-                <button onClick={() => { setEditingRecipeId(null); setIsRecipeModalOpen(true); }} className="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 px-4 rounded shadow-lg flex items-center justify-center gap-2 font-medium transition-transform active:scale-95">
-                  <Plus size={18} /> {t('sidebar.defineRecipe')}
-                </button>
-              </div>
-              <div className="px-4 pb-2 shrink-0">
-                 <div className="relative">
-                    <Search className="absolute left-2 top-2.5 text-zinc-500" size={14} />
-                    <input type="text" placeholder={t('sidebar.searchPlaceholder')} className="w-full bg-zinc-800 border-none rounded py-2 pl-8 pr-4 text-sm text-zinc-300 focus:ring-1 focus:ring-blue-500" />
-                 </div>
-              </div>
-              <div className="flex-1 overflow-y-auto px-2">
-                <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider px-2 py-2">{t('sidebar.definedRecipes')} ({recipes.length})</h3>
-                <div className="space-y-1">
-                  {recipes.map(recipe => (
-                    <div key={recipe.id} onClick={() => handleEditRecipe(recipe.id)} className={`group p-2 rounded cursor-pointer border transition-colors ${editingRecipeId === recipe.id ? 'bg-blue-900/20 border-blue-800' : 'hover:bg-zinc-800 border-transparent hover:border-zinc-700'}`}>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-zinc-200">{recipe.name}</span>
-                        <div className="flex items-center gap-1">
-                          <Cpu size={10} className="text-zinc-500" />
-                          <span className="text-[10px] text-zinc-500 uppercase tracking-tighter">
-                            {machines.find(m => m.id === recipe.machineId)?.name || 'Unknown'}
-                          </span>
-                        </div>
+          <div className="flex-1 overflow-hidden flex flex-col">
+            <div className="p-4 shrink-0">
+              <button onClick={() => { setEditingRecipeId(null); setIsRecipeModalOpen(true); }} className="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 px-4 rounded shadow-lg flex items-center justify-center gap-2 font-medium transition-transform active:scale-95">
+                <Plus size={18} /> {t('sidebar.defineRecipe')}
+              </button>
+            </div>
+            <div className="px-4 pb-2 shrink-0">
+               <div className="relative">
+                  <Search className="absolute left-2 top-2.5 text-zinc-500" size={14} />
+                  <input type="text" placeholder={t('sidebar.searchPlaceholder')} className="w-full bg-zinc-800 border-none rounded py-2 pl-8 pr-4 text-sm text-zinc-300 focus:ring-1 focus:ring-blue-500" />
+               </div>
+            </div>
+            <div className="flex-1 overflow-y-auto px-2">
+              <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider px-2 py-2">{t('sidebar.definedRecipes')} ({recipes.length})</h3>
+              <div className="space-y-1">
+                {recipes.map(recipe => (
+                  <div key={recipe.id} onClick={() => handleEditRecipe(recipe.id)} className={`group p-2 rounded cursor-pointer border transition-colors ${editingRecipeId === recipe.id ? 'bg-blue-900/20 border-blue-800' : 'hover:bg-zinc-800 border-transparent hover:border-zinc-700'}`}>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-zinc-200">{recipe.name}</span>
+                      <div className="flex items-center gap-1">
+                        <Cpu size={10} className="text-zinc-500" />
+                        <span className="text-[10px] text-zinc-500 uppercase tracking-tighter">
+                          {machines.find(m => m.id === recipe.machineId)?.name || 'Unknown'}
+                        </span>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             </div>
-          )}
+          </div>
         </div>
 
         <div className="flex-1 relative">
@@ -299,9 +320,35 @@ export default function App() {
             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsSettingsOpen(false)} />
             <div className="relative w-full max-w-4xl bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl flex flex-col max-h-[90vh]">
               <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Database className="text-blue-500" size={20} /> {t('management.title')}
-                </h2>
+                <div className="flex items-center gap-4">
+                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    <Database className="text-blue-500" size={20} /> {t('management.title')}
+                  </h2>
+                  <div className="h-6 w-px bg-zinc-800" />
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={handleExport}
+                      className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded transition-colors flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider"
+                      title={t('common.export')}
+                    >
+                      <Download size={14} /> {t('common.export')}
+                    </button>
+                    <button 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded transition-colors flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider"
+                      title={t('common.import')}
+                    >
+                      <Upload size={14} /> {t('common.import')}
+                    </button>
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      onChange={handleImport} 
+                      accept=".json" 
+                      className="hidden" 
+                    />
+                  </div>
+                </div>
                 <button onClick={() => setIsSettingsOpen(false)} className="p-2 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors">
                   <X size={20} />
                 </button>
