@@ -32,17 +32,18 @@ export const buildGraph = (resources: Resource[], recipes: Recipe[]) => {
           id: edgeId,
           source: input.resourceId,
           target: output.resourceId,
-          label: recipe.name,
+          // Remove labels to clean up the graph as per "去掉配方名显示"
           animated: true,
-          style: { stroke: '#71717a', strokeWidth: 2 },
-          labelStyle: { fill: '#18181b', fontSize: 11, fontWeight: 700 },
-          labelBgStyle: { fill: '#fff', fillOpacity: 0.9, rx: 4 },
-          labelBgPadding: [8, 4],
+          style: { 
+            stroke: '#52525b', 
+            strokeWidth: 2,
+            strokeDasharray: '8,4', // Dashed line for transport feel
+          },
           markerEnd: {
             type: MarkerType.ArrowClosed,
-            width: 20,
-            height: 20,
-            color: '#71717a',
+            width: 15,
+            height: 15,
+            color: '#52525b',
           },
         });
 
