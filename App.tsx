@@ -159,34 +159,45 @@ function MainLayout() {
       />
 
       {isSettingsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="absolute inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm" onClick={() => setIsSettingsOpen(false)} />
-          <div className="relative w-full max-w-4xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800">
-              <div className="flex items-center gap-4">
-                <h2 className="text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                  <Database className="text-blue-500" size={20} /> {t('management.title')}
+          <div className="relative w-full max-w-4xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-100 dark:border-zinc-800 bg-white dark:bg-[#1a1a1c]">
+              <div className="flex items-center gap-6">
+                <h2 className="text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-3">
+                  <Database className="text-blue-500" size={24} /> {t('management.title')}
                 </h2>
-                <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800" />
-                <div className="flex items-center gap-2">
-                  <button onClick={handleExport} className="p-1.5 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider">
-                    <Download size={14} /> {t('common.export')}
+                <div className="flex items-center gap-4 border-l border-zinc-200 dark:border-zinc-800 pl-6">
+                  <button 
+                    onClick={handleExport} 
+                    className="flex items-center gap-2 text-sm font-bold text-zinc-500 dark:text-zinc-400 hover:text-blue-600 transition-colors"
+                  >
+                    <Download size={18} /> {t('common.export')}
                   </button>
-                  <label className="p-1.5 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider cursor-pointer">
-                    <Upload size={14} /> {t('common.import')}
+                  <label 
+                    className="flex items-center gap-2 text-sm font-bold text-zinc-500 dark:text-zinc-400 hover:text-blue-600 transition-colors cursor-pointer"
+                  >
+                    <Upload size={18} /> {t('common.import')}
                     <input type="file" onChange={handleImport} accept=".json" className="hidden" />
                   </label>
                 </div>
               </div>
-              <button onClick={() => setIsSettingsOpen(false)} className="p-2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"><X size={20} /></button>
+              <button 
+                onClick={() => setIsSettingsOpen(false)} 
+                className="p-2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+              >
+                <X size={24} />
+              </button>
             </div>
-            <div className="flex-1 p-6 bg-zinc-50 dark:bg-zinc-950 overflow-auto">
-              <ResourceLibrary 
-                resources={resources} categories={categories} machines={machines}
-                onAddResource={addResource} onUpdateResource={updateResource} onDeleteResource={deleteResource}
-                onAddCategory={addCategory} onUpdateCategory={updateCategory} onDeleteCategory={deleteCategory}
-                onAddMachine={addMachine} onUpdateMachine={updateMachine} onDeleteMachine={deleteMachine}
-              />
+            <div className="flex-1 p-0 bg-zinc-50 dark:bg-[#09090b] overflow-auto">
+              <div className="p-6">
+                <ResourceLibrary 
+                  resources={resources} categories={categories} machines={machines}
+                  onAddResource={addResource} onUpdateResource={updateResource} onDeleteResource={deleteResource}
+                  onAddCategory={addCategory} onUpdateCategory={updateCategory} onDeleteCategory={deleteCategory}
+                  onAddMachine={addMachine} onUpdateMachine={updateMachine} onDeleteMachine={deleteMachine}
+                />
+              </div>
             </div>
           </div>
         </div>

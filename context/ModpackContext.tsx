@@ -65,9 +65,11 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const ws = useRef<WebSocket | null>(null);
   const isInternalChange = useRef(false);
 
+  // Capture current state for broadcast
   const broadcastState = useCallback((data: ModpackData) => {
-    if (ws.current?.readyState === WebSocket.OPEN) {
-      ws.current.send(JSON.stringify({
+    const socket = ws.current;
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({
         type: 'SYNC_STATE',
         data,
         sender: syncSettings.username,
@@ -76,8 +78,13 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [syncSettings.username]);
 
+  // Use current values if no data is passed (for manual trigger)
+  const triggerSync = useCallback(() => {
+    broadcastState({ categories, resources, recipes, machines });
+  }, [broadcastState, categories, resources, recipes, machines]);
+
   // Handle local state updates and broadcast
-  const wrapUpdate = useCallback((setter: any, data: ModpackData) => {
+  const wrapUpdate = useCallback((data: ModpackData) => {
     if (!isInternalChange.current) {
       broadcastState(data);
     }
@@ -87,21 +94,24 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.setItem('sync_settings', JSON.stringify(syncSettings));
     
     if (syncSettings.enabled && syncSettings.apiUrl) {
+      let socket: WebSocket | null = null;
+      let wsUrl = syncSettings.apiUrl.trim();
+      
+      if (wsUrl.startsWith('http')) {
+        wsUrl = wsUrl.replace(/^http/, 'ws');
+      }
+      
+      if (!wsUrl) return;
+
       const connect = () => {
         setSyncStatus('syncing');
-        // Convert http/https URL to ws/wss if user provided a standard URL
-        let wsUrl = syncSettings.apiUrl;
-        if (wsUrl.startsWith('http')) {
-          wsUrl = wsUrl.replace(/^http/, 'ws');
-        }
-        
         try {
-          const socket = new WebSocket(wsUrl);
+          socket = new WebSocket(wsUrl);
           ws.current = socket;
 
           socket.onopen = () => {
+            if (ws.current !== socket) return;
             setSyncStatus('success');
-            // Immediate Auth
             socket.send(JSON.stringify({
               type: 'AUTH',
               username: syncSettings.username,
@@ -111,16 +121,18 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
           };
 
           socket.onmessage = (event) => {
+            if (ws.current !== socket) return;
             try {
               const msg = JSON.parse(event.data);
-              if (msg.type === 'SYNC_STATE') {
+              if (msg.type === 'SYNC_STATE' && msg.data) {
                 isInternalChange.current = true;
                 const remote: ModpackData = msg.data;
                 setCategories(remote.categories);
                 setResources(remote.resources);
                 setRecipes(remote.recipes);
                 setMachines(remote.machines);
-                setTimeout(() => { isInternalChange.current = false; }, 50);
+                // Allow a small window for the state updates to settle before enabling broadcasts again
+                setTimeout(() => { isInternalChange.current = false; }, 100);
               }
             } catch (e) {
               console.error('Failed to parse WS message', e);
@@ -128,97 +140,105 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
           };
 
           socket.onclose = () => {
-            setSyncStatus('idle');
-            // Optional: Automatic reconnection logic
+            if (ws.current === socket) {
+              setSyncStatus('idle');
+              ws.current = null;
+            }
           };
 
           socket.onerror = () => {
-            setSyncStatus('error');
-            showNotification('error', 'Connection Failed', 'Could not reach the synchronization server.');
+            if (ws.current === socket) {
+              setSyncStatus('error');
+              showNotification('error', 'Connection Failed', 'Could not reach the synchronization server.');
+            }
           };
         } catch (e) {
           setSyncStatus('error');
+          console.error('WebSocket creation error:', e);
         }
       };
 
       connect();
       return () => {
-        ws.current?.close();
+        if (socket) {
+          socket.close();
+          if (ws.current === socket) ws.current = null;
+        }
       };
+    } else {
+      setSyncStatus('idle');
+      if (ws.current) {
+        ws.current.close();
+        ws.current = null;
+      }
     }
   }, [syncSettings.enabled, syncSettings.apiUrl, syncSettings.username, syncSettings.password, showNotification]);
-
-  const triggerSync = () => {
-    if (ws.current?.readyState === WebSocket.OPEN) {
-      broadcastState({ categories, resources, recipes, machines });
-    }
-  };
 
   // Operations wrapped with broadcast logic
   const addResource = (res: Resource) => setResources(prev => {
     const next = [...prev, res];
-    wrapUpdate(null, { categories, resources: next, recipes, machines });
+    wrapUpdate({ categories, resources: next, recipes, machines });
     return next;
   });
 
   const updateResource = (res: Resource) => setResources(prev => {
     const next = prev.map(r => r.id === res.id ? res : r);
-    wrapUpdate(null, { categories, resources: next, recipes, machines });
+    wrapUpdate({ categories, resources: next, recipes, machines });
     return next;
   });
 
   const deleteResource = (id: string) => setResources(prev => {
     const next = prev.filter(r => r.id !== id);
-    wrapUpdate(null, { categories, resources: next, recipes, machines });
+    wrapUpdate({ categories, resources: next, recipes, machines });
     return next;
   });
 
   const addRecipe = (recipe: Recipe) => setRecipes(prev => {
     const idx = prev.findIndex(r => r.id === recipe.id);
     const next = idx >= 0 ? prev.map((r, i) => i === idx ? recipe : r) : [...prev, recipe];
-    wrapUpdate(null, { categories, resources, recipes: next, machines });
+    wrapUpdate({ categories, resources, recipes: next, machines });
     return next;
   });
 
   const deleteRecipe = (id: string) => setRecipes(prev => {
     const next = prev.filter(r => r.id !== id);
-    wrapUpdate(null, { categories, resources, recipes: next, machines });
+    wrapUpdate({ categories, resources, recipes: next, machines });
     return next;
   });
 
   const addCategory = (cat: ResourceCategory) => setCategories(prev => {
     const next = [...prev, cat];
-    wrapUpdate(null, { categories: next, resources, recipes, machines });
+    wrapUpdate({ categories: next, resources, recipes, machines });
     return next;
   });
 
   const updateCategory = (cat: ResourceCategory) => setCategories(prev => {
     const next = prev.map(c => c.id === cat.id ? cat : c);
-    wrapUpdate(null, { categories: next, resources, recipes, machines });
+    wrapUpdate({ categories: next, resources, recipes, machines });
     return next;
   });
 
   const deleteCategory = (id: string) => setCategories(prev => {
     const next = prev.filter(c => c.id !== id);
-    wrapUpdate(null, { categories: next, resources, recipes, machines });
+    wrapUpdate({ categories: next, resources, recipes, machines });
     return next;
   });
 
   const addMachine = (m: MachineDefinition) => setMachines(prev => {
     const next = [...prev, m];
-    wrapUpdate(null, { categories, resources, recipes, machines: next });
+    wrapUpdate({ categories, resources, recipes, machines: next });
     return next;
   });
 
   const updateMachine = (m: MachineDefinition) => setMachines(prev => {
     const next = prev.map(old => old.id === m.id ? m : old);
-    wrapUpdate(null, { categories, resources, recipes, machines: next });
+    wrapUpdate({ categories, resources, recipes, machines: next });
     return next;
   });
 
   const deleteMachine = (id: string) => setMachines(prev => {
     const next = prev.filter(m => m.id !== id);
-    wrapUpdate(null, { categories, resources, recipes, machines: next });
+    wrapUpdate({ categories, resources, recipes, machines: next });
     return next;
   });
 
