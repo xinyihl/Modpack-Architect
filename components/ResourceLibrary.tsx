@@ -1,8 +1,9 @@
 
 import React, { useState, useMemo } from 'react';
 import { Plus, Trash2, Edit2, Box, Droplets, Zap, Wind, Star, Tag, Cpu, X, Settings2, Search, Filter } from 'lucide-react';
-import { Resource, ResourceCategory, ResourceType, MachineDefinition, MachineSlot } from '../types';
+import { Resource, ResourceCategory, ResourceType, MachineDefinition, MachineSlot, Recipe } from '../types';
 import { useI18n } from '../App';
+import { useModpack } from '../context/ModpackContext';
 
 interface ResourceLibraryProps {
   resources: Resource[];
@@ -26,6 +27,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
   onAddMachine, onUpdateMachine, onDeleteMachine
 }) => {
   const { t } = useI18n();
+  const { recipes } = useModpack();
   const [activeTab, setActiveTab] = useState<'resources' | 'categories' | 'machines'>('resources');
 
   const [resSearch, setResSearch] = useState('');
@@ -49,6 +51,51 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
   const [macDesc, setMacDesc] = useState('');
   const [macInputs, setMacInputs] = useState<MachineSlot[]>([]);
   const [macOutputs, setMacOutputs] = useState<MachineSlot[]>([]);
+
+  const handleDeleteResource = (id: string) => {
+    const res = resources.find(r => r.id === id);
+    const dependentRecipe = recipes.find(r => 
+      r.inputs.some(i => i.resourceId === id) || 
+      r.outputs.some(o => o.resourceId === id)
+    );
+
+    if (dependentRecipe) {
+      alert(`无法删除资源 "${res?.name}"：它正在被配方 "${dependentRecipe.name}" 使用。`);
+      return;
+    }
+
+    if (confirm(t('common.confirmDelete'))) {
+      onDeleteResource(id);
+    }
+  };
+
+  const handleDeleteCategory = (id: string) => {
+    const cat = categories.find(c => c.id === id);
+    const dependentResource = resources.find(r => r.type === id);
+
+    if (dependentResource) {
+      alert(`无法删除分类 "${cat?.name}"：资源 "${dependentResource.name}" 属于该分类。`);
+      return;
+    }
+
+    if (confirm(t('common.confirmDelete'))) {
+      onDeleteCategory(id);
+    }
+  };
+
+  const handleDeleteMachine = (id: string) => {
+    const machine = machines.find(m => m.id === id);
+    const dependentRecipe = recipes.find(r => r.machineId === id);
+
+    if (dependentRecipe) {
+      alert(`无法删除机器 "${machine?.name}"：配方 "${dependentRecipe.name}" 正在使用它。`);
+      return;
+    }
+
+    if (confirm(t('common.confirmDelete'))) {
+      onDeleteMachine(id);
+    }
+  };
 
   const startEditResource = (r: Resource) => {
     setEditingResourceId(r.id);
@@ -212,7 +259,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
                     </div>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button onClick={() => startEditResource(res)} className="p-2 text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"><Edit2 size={16} /></button>
-                      <button onClick={() => onDeleteResource(res.id)} className="p-2 text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"><Trash2 size={16} /></button>
+                      <button onClick={() => handleDeleteResource(res.id)} className="p-2 text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"><Trash2 size={16} /></button>
                     </div>
                   </div>
                 );
@@ -275,7 +322,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
                 </div>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button onClick={() => startEditCategory(cat)} className="p-2 text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"><Edit2 size={16}/></button>
-                  <button onClick={() => onDeleteCategory(cat.id)} className="p-2 text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"><Trash2 size={16}/></button>
+                  <button onClick={() => handleDeleteCategory(cat.id)} className="p-2 text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"><Trash2 size={16}/></button>
                 </div>
               </div>
             ))}
@@ -352,7 +399,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
                 </div>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button onClick={() => startEditMachine(m)} className="p-2 text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"><Edit2 size={16}/></button>
-                  <button onClick={() => onDeleteMachine(m.id)} className="p-2 text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"><Trash2 size={16}/></button>
+                  <button onClick={() => handleDeleteMachine(m.id)} className="p-2 text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"><Trash2 size={16}/></button>
                 </div>
               </div>
             ))}

@@ -48,6 +48,31 @@ function MainLayout() {
     setIsRecipeModalOpen(true);
   };
 
+  const handleDeleteRecipe = (id: string) => {
+    const recipeToDelete = recipes.find(r => r.id === id);
+    if (!recipeToDelete) return;
+
+    // Check if any other recipe uses the outputs of this recipe as their inputs
+    const outputs = recipeToDelete.outputs.map(o => o.resourceId);
+    const dependentRecipe = recipes.find(r => 
+      r.id !== id && r.inputs.some(i => outputs.includes(i.resourceId))
+    );
+
+    if (dependentRecipe) {
+      // Find if there are other recipes producing these outputs
+      const otherProducers = recipes.filter(r => 
+        r.id !== id && r.outputs.some(o => outputs.includes(o.resourceId))
+      );
+
+      if (otherProducers.length === 0) {
+        alert(`无法删除配方 "${recipeToDelete.name}"：它是资源 "${resources.find(res => outputs.includes(res.id))?.name}" 的唯一产出途径，而该资源正被配方 "${dependentRecipe.name}" 使用。`);
+        return;
+      }
+    }
+
+    deleteRecipe(id);
+  };
+
   const handleExport = () => {
     const data = { categories, resources, recipes, machines };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -121,7 +146,7 @@ function MainLayout() {
         machines={machines}
         onClose={() => { setIsRecipeModalOpen(false); setEditingRecipeId(null); }} 
         onSave={addRecipe} 
-        onDelete={deleteRecipe}
+        onDelete={handleDeleteRecipe}
       />
 
       {isSettingsOpen && (
