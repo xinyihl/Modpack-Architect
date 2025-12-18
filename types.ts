@@ -12,7 +12,7 @@ export interface Resource {
   id: string;
   name: string;
   type: ResourceType;
-  hidden: boolean; // True for energy, etc.
+  hidden: boolean;
 }
 
 export interface ResourceStack {
@@ -38,14 +38,26 @@ export interface MachineDefinition {
 export interface Recipe {
   id: string;
   name: string;
-  machineId: string; // Linking to MachineDefinition
-  duration?: number; // in ticks
+  machineId: string;
+  duration?: number;
   inputs: ResourceStack[];
   outputs: ResourceStack[];
   note?: string;
 }
 
-export interface GraphData {
+export interface SyncSettings {
+  enabled: boolean;
+  apiUrl: string;
+  username: string;
+  password?: string;
+  syncInterval: number; // in seconds
+}
+
+export type SyncStatus = 'idle' | 'syncing' | 'error' | 'success';
+
+export interface ModpackData {
+  categories: ResourceCategory[];
   resources: Resource[];
   recipes: Recipe[];
+  machines: MachineDefinition[];
 }

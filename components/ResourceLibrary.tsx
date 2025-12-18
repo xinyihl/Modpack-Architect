@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Plus, Trash2, Edit2, Box, Droplets, Zap, Wind, Star, Tag, Cpu, X, Settings2, Search, Filter } from 'lucide-react';
+import { Plus, Trash2, Edit2, Box, Droplets, Zap, Wind, Star, Tag, Cpu, X, Settings2, Search, Filter, Share2, Globe, RefreshCcw, Wifi, WifiOff } from 'lucide-react';
 import { Resource, ResourceCategory, ResourceType, MachineDefinition, MachineSlot, Recipe } from '../types';
 import { useI18n } from '../App';
 import { useModpack } from '../context/ModpackContext';
@@ -28,9 +28,9 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
   onAddMachine, onUpdateMachine, onDeleteMachine
 }) => {
   const { t } = useI18n();
-  const { recipes } = useModpack();
+  const { recipes, syncSettings, syncStatus, setSyncSettings, triggerSync } = useModpack();
   const { showNotification } = useNotifications();
-  const [activeTab, setActiveTab] = useState<'resources' | 'categories' | 'machines'>('resources');
+  const [activeTab, setActiveTab] = useState<'resources' | 'categories' | 'machines' | 'collaboration'>('resources');
 
   const [resSearch, setResSearch] = useState('');
   const [resFilterCat, setResFilterCat] = useState('all');
@@ -136,7 +136,6 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
     if (editingResourceId) onUpdateResource(res);
     else onAddResource(res);
     cancelEditResource();
-    showNotification('success', '资源已保存', `"${res.name}" 已同步。`);
   };
 
   const handleSubmitCategory = (e: React.FormEvent) => {
@@ -146,7 +145,6 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
     if (editingCategoryId) onUpdateCategory(cat);
     else onAddCategory(cat);
     cancelEditCategory();
-    showNotification('success', '分类已保存', `"${cat.name}" 已同步。`);
   };
 
   const handleSubmitMachine = (e: React.FormEvent) => {
@@ -156,7 +154,6 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
     if (editingMachineId) onUpdateMachine(mac);
     else onAddMachine(mac);
     cancelEditMachine();
-    showNotification('success', '机器已保存', `"${mac.name}" 已同步。`);
   };
 
   const addSlot = (type: 'input' | 'output') => {
@@ -188,7 +185,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
   return (
     <div className="space-y-6">
       <div className="flex border-b border-zinc-200 dark:border-zinc-800">
-        {(['resources', 'categories', 'machines'] as const).map(tab => (
+        {(['resources', 'categories', 'machines', 'collaboration'] as const).map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 text-sm font-bold capitalize transition-colors ${activeTab === tab ? 'text-blue-600 border-b-2 border-blue-600' : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300'}`}>
             {t(`management.tabs.${tab}`)}
           </button>
@@ -253,30 +250,24 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
           </div>
 
           <div className="grid grid-cols-1 gap-2 max-h-[400px] overflow-y-auto pr-1">
-            {filteredResources.length > 0 ? (
-              filteredResources.map((res) => {
-                const cat = categories.find(c => c.id === res.type);
-                return (
-                  <div key={res.id} className="flex items-center justify-between p-3 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded group hover:border-blue-400 dark:hover:border-zinc-700 transition-colors shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-zinc-50 dark:bg-zinc-800 rounded">{getIcon(cat?.iconType || 'box', cat?.color || '#52525b')}</div>
-                      <div>
-                        <div className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{res.name}</div>
-                        <div className="text-[10px] font-mono text-zinc-400 dark:text-zinc-500">{res.id} • {cat?.name}</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => startEditResource(res)} className="p-2 text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"><Edit2 size={16} /></button>
-                      <button onClick={() => handleDeleteResource(res.id)} className="p-2 text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"><Trash2 size={16} /></button>
+            {filteredResources.map((res) => {
+              const cat = categories.find(c => c.id === res.type);
+              return (
+                <div key={res.id} className="flex items-center justify-between p-3 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded group hover:border-blue-400 dark:hover:border-zinc-700 transition-colors shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-zinc-50 dark:bg-zinc-800 rounded">{getIcon(cat?.iconType || 'box', cat?.color || '#52525b')}</div>
+                    <div>
+                      <div className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{res.name}</div>
+                      <div className="text-[10px] font-mono text-zinc-400 dark:text-zinc-500">{res.id} • {cat?.name}</div>
                     </div>
                   </div>
-                );
-              })
-            ) : (
-              <div className="text-center py-12 text-zinc-400 italic text-sm border-2 border-dashed border-zinc-200 dark:border-zinc-900 rounded-xl">
-                {t('common.noResults')}
-              </div>
-            )}
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => startEditResource(res)} className="p-2 text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"><Edit2 size={16} /></button>
+                    <button onClick={() => handleDeleteResource(res.id)} className="p-2 text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"><Trash2 size={16} /></button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -321,105 +312,83 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
               {editingCategoryId ? t('common.update') : t('common.create')}
             </button>
           </form>
-          <div className="grid grid-cols-2 gap-2">
-            {categories.map((cat) => (
-              <div key={cat.id} className="flex items-center justify-between p-3 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded group hover:border-blue-400 dark:hover:border-zinc-700 transition-colors shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-zinc-50 dark:bg-zinc-800 rounded" style={{ backgroundColor: `${cat.color}15` }}>{getIcon(cat.iconType, cat.color)}</div>
-                  <div><div className="text-sm font-bold text-zinc-800 dark:text-zinc-200">{cat.name}</div><div className="text-[10px] font-mono text-zinc-400 dark:text-zinc-600">{cat.id}</div></div>
-                </div>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => startEditCategory(cat)} className="p-2 text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"><Edit2 size={16}/></button>
-                  <button onClick={() => handleDeleteCategory(cat.id)} className="p-2 text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"><Trash2 size={16}/></button>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       )}
 
-      {activeTab === 'machines' && (
+      {activeTab === 'collaboration' && (
         <div className="space-y-6 animate-in fade-in duration-300">
-          <form onSubmit={handleSubmitMachine} className="bg-white dark:bg-zinc-800/50 p-4 rounded-lg border border-zinc-200 dark:border-zinc-700 space-y-4 shadow-sm">
-             <h3 className="text-xs font-bold text-zinc-400 dark:text-zinc-400 uppercase tracking-widest flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                {editingMachineId ? <Settings2 size={14} /> : <Cpu size={14} />} 
-                {editingMachineId ? t('management.macEdit') : t('management.macTitle')}
-              </span>
-              {editingMachineId && <button type="button" onClick={cancelEditMachine} className="text-zinc-400 hover:text-zinc-900 dark:hover:text-white"><X size={14}/></button>}
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="block text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold ml-1">{t('common.name')}</label>
-                <input type="text" required value={macName} onChange={(e) => setMacName(e.target.value)} placeholder="e.g. Arc Furnace" className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded px-3 py-1.5 text-sm text-zinc-900 dark:text-white focus:ring-1 focus:ring-blue-500 outline-none" />
-              </div>
-              <div className="space-y-1">
-                <label className="block text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold ml-1">{t('common.id')}</label>
-                <input type="text" value={macId} disabled={!!editingMachineId} onChange={(e) => setMacId(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '_'))} className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded px-3 py-1.5 text-sm font-mono text-zinc-500 dark:text-zinc-400 disabled:opacity-50" />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <label className="block text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold ml-1">{t('common.description')}</label>
-              <textarea value={macDesc} onChange={(e) => setMacDesc(e.target.value)} rows={2} className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded px-3 py-1.5 text-sm text-zinc-700 dark:text-zinc-300 outline-none focus:ring-1 focus:ring-blue-500 resize-none shadow-inner" placeholder="Machine purpose..." />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-8">
-              <div className="space-y-3">
-                <div className="flex justify-between items-center"><label className="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold ml-1">输入项</label><button type="button" onClick={() => addSlot('input')} className="text-blue-600 dark:text-blue-500 hover:text-blue-500 dark:hover:text-blue-400 text-[10px] font-bold uppercase tracking-tight">+ 添加槽位</button></div>
-                <div className="space-y-2">
-                  {macInputs.map((s, i) => (
-                    <div key={i} className="flex gap-2 items-center p-2 bg-zinc-50 dark:bg-zinc-900/40 rounded border border-zinc-100 dark:border-zinc-800">
-                      <select value={s.type} onChange={(e) => setMacInputs(macInputs.map((x, idx) => idx === i ? {...x, type: e.target.value} : x))} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded px-1 py-1 text-[10px] text-zinc-600 dark:text-zinc-400 w-24 outline-none">
-                        {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                      </select>
-                      <input type="text" value={s.label} onChange={(e) => setMacInputs(macInputs.map((x, idx) => idx === i ? {...x, label: e.target.value} : x))} className="flex-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 text-[10px] text-zinc-700 dark:text-zinc-300 outline-none" placeholder="槽位标签" />
-                      <div className="flex items-center gap-1.5 px-1">
-                        <input type="checkbox" id={`opt-in-${i}`} checked={s.optional} onChange={(e) => setMacInputs(macInputs.map((x, idx) => idx === i ? {...x, optional: e.target.checked} : x))} className="w-3 h-3 rounded" />
-                        <label htmlFor={`opt-in-${i}`} className="text-[9px] font-bold text-zinc-500 uppercase cursor-pointer">可选</label>
-                      </div>
-                      <button type="button" onClick={() => setMacInputs(macInputs.filter((_, idx) => idx !== i))} className="text-zinc-400 hover:text-red-600 transition-colors"><Trash2 size={12}/></button>
-                    </div>
-                  ))}
+           <div className="bg-white dark:bg-zinc-800/50 p-6 rounded-lg border border-zinc-200 dark:border-zinc-700 space-y-6 shadow-sm">
+             <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <Globe size={18} className="text-blue-500" /> {t('management.sync.title')}
+                </h3>
+                <div className="flex items-center gap-2">
+                   {syncStatus === 'success' ? <Wifi size={14} className="text-emerald-500" /> : <WifiOff size={14} className="text-red-500" />}
+                   <span className={`text-[10px] font-bold uppercase ${syncStatus === 'success' ? 'text-emerald-500' : 'text-zinc-500'}`}>{syncStatus}</span>
                 </div>
-              </div>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center"><label className="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold ml-1">输出项</label><button type="button" onClick={() => addSlot('output')} className="text-orange-600 dark:text-orange-500 hover:text-orange-500 dark:hover:text-orange-400 text-[10px] font-bold uppercase tracking-tight">+ 添加槽位</button></div>
-                <div className="space-y-2">
-                  {macOutputs.map((s, i) => (
-                    <div key={i} className="flex gap-2 items-center p-2 bg-zinc-50 dark:bg-zinc-900/40 rounded border border-zinc-100 dark:border-zinc-800">
-                      <select value={s.type} onChange={(e) => setMacOutputs(macOutputs.map((x, idx) => idx === i ? {...x, type: e.target.value} : x))} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded px-1 py-1 text-[10px] text-zinc-600 dark:text-zinc-400 w-24 outline-none">
-                        {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                      </select>
-                      <input type="text" value={s.label} onChange={(e) => setMacOutputs(macOutputs.map((x, idx) => idx === i ? {...x, label: e.target.value} : x))} className="flex-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 text-[10px] text-zinc-700 dark:text-zinc-300 outline-none" placeholder="槽位标签" />
-                      <div className="flex items-center gap-1.5 px-1">
-                        <input type="checkbox" id={`opt-out-${i}`} checked={s.optional} onChange={(e) => setMacOutputs(macOutputs.map((x, idx) => idx === i ? {...x, optional: e.target.checked} : x))} className="w-3 h-3 rounded" />
-                        <label htmlFor={`opt-out-${i}`} className="text-[9px] font-bold text-zinc-500 uppercase cursor-pointer">可选</label>
-                      </div>
-                      <button type="button" onClick={() => setMacOutputs(macOutputs.filter((_, idx) => idx !== i))} className="text-zinc-400 hover:text-red-600 transition-colors"><Trash2 size={12}/></button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg font-bold text-sm transition-colors shadow-md active:scale-[0.99]">
-              {editingMachineId ? t('common.update') : t('common.create')}
-            </button>
-          </form>
+             </div>
 
-          <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto pr-1">
-            {machines.map((m) => (
-              <div key={m.id} className="flex items-center justify-between p-3 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded group hover:border-blue-400 dark:hover:border-zinc-700 transition-colors shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-zinc-50 dark:bg-zinc-800 rounded text-blue-600 dark:text-blue-500"><Cpu size={16}/></div>
-                  <div><div className="text-sm font-bold text-zinc-800 dark:text-zinc-200">{m.name}</div><div className="text-[10px] font-mono text-zinc-400 dark:text-zinc-600">{m.id} • {m.inputs.length} IN / {m.outputs.length} OUT</div></div>
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="col-span-2 flex items-center gap-3 p-3 bg-zinc-50 dark:bg-zinc-900 rounded border border-zinc-100 dark:border-zinc-800">
+                   <input 
+                     type="checkbox" 
+                     id="enable-sync" 
+                     checked={syncSettings.enabled} 
+                     onChange={(e) => setSyncSettings({...syncSettings, enabled: e.target.checked})}
+                     className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                   />
+                   <label htmlFor="enable-sync" className="text-sm font-bold text-zinc-700 dark:text-zinc-200 cursor-pointer">
+                     {t('management.sync.enable')} (WebSocket Real-time)
+                   </label>
                 </div>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => startEditMachine(m)} className="p-2 text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"><Edit2 size={16}/></button>
-                  <button onClick={() => handleDeleteMachine(m.id)} className="p-2 text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"><Trash2 size={16}/></button>
+
+                <div className="col-span-2 space-y-1">
+                   <label className="block text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold ml-1">Architect Server URL (ws/wss)</label>
+                   <div className="relative">
+                      <Globe size={14} className="absolute left-3 top-2.5 text-zinc-400" />
+                      <input 
+                        type="text" 
+                        value={syncSettings.apiUrl} 
+                        onChange={(e) => setSyncSettings({...syncSettings, apiUrl: e.target.value})}
+                        placeholder="wss://your-architect-server.com/api/v1/live" 
+                        className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded pl-10 pr-3 py-2 text-sm text-zinc-900 dark:text-white focus:ring-1 focus:ring-blue-500 outline-none"
+                      />
+                   </div>
+                   <p className="text-[10px] text-zinc-500 mt-1 italic">Edits are broadcast instantly via WebSocket when enabled.</p>
                 </div>
-              </div>
-            ))}
-          </div>
+
+                <div className="space-y-1">
+                   <label className="block text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold ml-1">{t('management.sync.username')}</label>
+                   <input 
+                     type="text" 
+                     value={syncSettings.username} 
+                     onChange={(e) => setSyncSettings({...syncSettings, username: e.target.value})}
+                     className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded px-3 py-2 text-sm text-zinc-900 dark:text-white focus:ring-1 focus:ring-blue-500 outline-none"
+                   />
+                </div>
+
+                <div className="space-y-1">
+                   <label className="block text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold ml-1">{t('management.sync.password')}</label>
+                   <input 
+                     type="password" 
+                     value={syncSettings.password} 
+                     onChange={(e) => setSyncSettings({...syncSettings, password: e.target.value})}
+                     className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded px-3 py-2 text-sm text-zinc-900 dark:text-white focus:ring-1 focus:ring-blue-500 outline-none"
+                   />
+                </div>
+
+                <div className="flex items-end col-span-2 pt-4">
+                  <button 
+                    onClick={() => triggerSync()}
+                    disabled={!syncSettings.enabled || syncStatus !== 'success'}
+                    className="w-full bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded font-bold text-xs flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg"
+                  >
+                    <RefreshCcw size={14} className={syncStatus === 'syncing' ? 'animate-spin' : ''} />
+                    Force Broadcast Local State
+                  </button>
+                </div>
+             </div>
+           </div>
         </div>
       )}
     </div>

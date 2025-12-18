@@ -1,5 +1,4 @@
 
-
 export const translations = {
   'en-US': {
     common: {
@@ -62,7 +61,8 @@ export const translations = {
       tabs: {
         resources: "Resources",
         categories: "Categories",
-        machines: "Machines"
+        machines: "Machines",
+        collaboration: "Collaboration"
       },
       resTitle: "Register New Resource",
       resEdit: "Edit Resource",
@@ -74,6 +74,17 @@ export const translations = {
       color: "Color",
       displayName: "Display Name",
       internalId: "Internal ID",
+      sync: {
+        title: "Multiplayer Sync",
+        enable: "Enable Synchronization",
+        apiUrl: "API Endpoint URL",
+        username: "Username",
+        password: "Password",
+        interval: "Interval (seconds)",
+        status: "Status",
+        lastSync: "Last Sync",
+        trigger: "Sync Now"
+      }
     }
   },
   'zh-CN': {
@@ -138,7 +149,8 @@ export const translations = {
       tabs: {
         resources: "资源管理",
         categories: "分类管理",
-        machines: "机器管理"
+        machines: "机器管理",
+        collaboration: "团队协作"
       },
       resTitle: "注册新资源",
       resEdit: "编辑资源",
@@ -150,6 +162,17 @@ export const translations = {
       color: "颜色",
       displayName: "显示名称",
       internalId: "内部 ID",
+      sync: {
+        title: "多人数据同步",
+        enable: "启用自动同步",
+        apiUrl: "API 地址",
+        username: "用户名",
+        password: "密码",
+        interval: "同步频率 (秒)",
+        status: "同步状态",
+        lastSync: "上次同步",
+        trigger: "立即同步"
+      }
     }
   }
 };
