@@ -26,6 +26,14 @@ export interface MachineSlot {
   optional?: boolean;
 }
 
+export type MetadataFieldType = 'string' | 'number' | 'boolean' | 'color';
+
+export interface MetadataField {
+  key: string;
+  label: string;
+  type: MetadataFieldType;
+}
+
 export interface MachineDefinition {
   id: string;
   name: string;
@@ -33,6 +41,7 @@ export interface MachineDefinition {
   icon?: string;
   inputs: MachineSlot[];
   outputs: MachineSlot[];
+  metadataSchema?: MetadataField[];
 }
 
 export interface Recipe {
@@ -43,6 +52,7 @@ export interface Recipe {
   inputs: ResourceStack[];
   outputs: ResourceStack[];
   note?: string;
+  metadata?: Record<string, any>;
 }
 
 export interface SyncSettings {

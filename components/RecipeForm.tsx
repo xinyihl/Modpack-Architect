@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Save, AlertCircle, Search, X, Trash2 } from 'lucide-react';
+import { Save, AlertCircle, Search, X, Trash2, Settings2 } from 'lucide-react';
 import { Recipe, Resource, ResourceStack, MachineDefinition, MachineSlot } from '../types';
 import { useI18n } from '../App';
 import { useNotifications } from '../context/NotificationContext';
@@ -23,6 +23,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
   
   const [inputs, setInputs] = useState<{ resourceId: string; amount: number }[]>([]);
   const [outputs, setOutputs] = useState<{ resourceId: string; amount: number }[]>([]);
+  const [metadata, setMetadata] = useState<Record<string, any>>({});
   
   const [inputSearch, setInputSearch] = useState<string[]>([]);
   const [outputSearch, setOutputSearch] = useState<string[]>([]);
@@ -47,6 +48,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
     if (initialRecipe) {
       setName(initialRecipe.name);
       setDuration(initialRecipe.duration || 100);
+      setMetadata(initialRecipe.metadata || {});
       const inStacks = initStacks(machine.inputs, initialRecipe.inputs);
       const outStacks = initStacks(machine.outputs, initialRecipe.outputs);
       setInputs(inStacks);
@@ -58,6 +60,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
     } else {
       setName('');
       setDuration(100);
+      setMetadata({});
       setInputs(initStacks(machine.inputs));
       setOutputs(initStacks(machine.outputs));
       setInputSearch(machine.inputs.map(() => ''));
@@ -81,7 +84,6 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
     }
   }, [activeSlot]);
 
-  // Update position on scroll to keep dropdown attached to input
   useEffect(() => {
     const handleScroll = () => {
       if (activeSlot) {
@@ -101,7 +103,6 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
     return () => window.removeEventListener('scroll', handleScroll, true);
   }, [activeSlot]);
 
-  // Auto-generate name based on first input
   useEffect(() => {
     if (!initialRecipe && !isUserEditingName.current && inputs.length > 0) {
       const firstInputResId = inputs[0].resourceId;
@@ -145,6 +146,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
       duration,
       inputs: inputs.map(i => ({ resourceId: i.resourceId, amount: i.amount })),
       outputs: outputs.map(o => ({ resourceId: o.resourceId, amount: o.amount })),
+      metadata: metadata,
     };
 
     onSave(recipe);
@@ -174,6 +176,10 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
       setOutputSearch(newSearch);
     }
     setActiveSlot(null);
+  };
+
+  const updateMetadata = (key: string, value: any) => {
+    setMetadata(prev => ({ ...prev, [key]: value }));
   };
 
   const renderFixedSlots = (
@@ -327,6 +333,76 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
     );
   };
 
+  const renderMetadataFields = () => {
+    if (!machine.metadataSchema || machine.metadataSchema.length === 0) return null;
+
+    return (
+      <div className="pt-8 mt-4 border-t border-zinc-800/50">
+        <div className="flex items-center gap-3 mb-6">
+          <Settings2 size={16} className="text-blue-500" />
+          <h4 className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.2em]">{t('form.extraMetadata') || 'Recipe Properties'}</h4>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-zinc-950/20 p-6 rounded-2xl border border-zinc-800/50">
+          {machine.metadataSchema.map((field) => (
+            <div key={field.key} className="space-y-2">
+              <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest ml-1">{field.label}</label>
+              {field.type === 'string' && (
+                <input
+                  type="text"
+                  value={metadata[field.key] || ''}
+                  onChange={(e) => updateMetadata(field.key, e.target.value)}
+                  className="w-full bg-zinc-950/60 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-1 focus:ring-blue-500 outline-none font-bold"
+                  placeholder={`Enter ${field.label.toLowerCase()}...`}
+                />
+              )}
+              {field.type === 'number' && (
+                <input
+                  type="number"
+                  value={metadata[field.key] || 0}
+                  onChange={(e) => updateMetadata(field.key, Number(e.target.value))}
+                  className="w-full bg-zinc-950/60 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-1 focus:ring-blue-500 outline-none font-mono font-bold"
+                />
+              )}
+              {field.type === 'boolean' && (
+                <div className="flex items-center gap-3 bg-zinc-950/60 border border-zinc-800 rounded-xl px-4 py-2.5 h-[42px]">
+                   <label className="relative inline-flex items-center cursor-pointer flex-1">
+                      <input 
+                        type="checkbox" 
+                        checked={!!metadata[field.key]} 
+                        onChange={(e) => updateMetadata(field.key, e.target.checked)} 
+                        className="sr-only peer" 
+                      />
+                      <div className="w-10 h-5 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-zinc-600 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-600 peer-checked:after:bg-white"></div>
+                      <span className="ml-3 text-[10px] font-black text-zinc-400 uppercase tracking-widest">{metadata[field.key] ? 'ENABLED' : 'DISABLED'}</span>
+                   </label>
+                </div>
+              )}
+              {field.type === 'color' && (
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="text"
+                    value={metadata[field.key] || '#ffffff'}
+                    onChange={(e) => updateMetadata(field.key, e.target.value)}
+                    className="flex-1 bg-zinc-950/60 border border-zinc-800 rounded-xl px-4 py-2.5 text-[10px] font-mono font-bold text-white focus:ring-1 focus:ring-blue-500 outline-none h-[42px]"
+                  />
+                  <div className="relative w-10 h-[42px] shrink-0">
+                    <div className="absolute inset-0 rounded-xl border border-zinc-800 shadow-inner" style={{ backgroundColor: metadata[field.key] || '#ffffff' }} />
+                    <input 
+                      type="color" 
+                      value={metadata[field.key] || '#ffffff'} 
+                      onChange={(e) => updateMetadata(field.key, e.target.value)} 
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <form ref={containerRef} onSubmit={handleSubmit} className="space-y-8">
       <div className="flex items-center gap-6 bg-zinc-950/40 p-6 rounded-2xl border border-zinc-800 shadow-xl">
@@ -381,6 +457,8 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
           {renderFixedSlots(machine.outputs, outputs, outputSearch, setOutputSearch, setOutputs, 'output', t('form.outputs'), 'text-orange-500')}
         </div>
       </div>
+
+      {renderMetadataFields()}
 
       <div className="flex items-center gap-6 pt-10 border-t border-zinc-800 mt-4">
         {initialRecipe && onDelete && (
