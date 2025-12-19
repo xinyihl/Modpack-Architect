@@ -1,9 +1,7 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { X, Code, Clipboard, Check, Download, Puzzle, FileCode, Terminal } from 'lucide-react';
 import { useModpack } from '../context/ModpackContext';
-import { useI18n } from '../App';
-import { Recipe, RecipeProcessor, MachineDefinition, Resource, Plugin } from '../types';
+import { useI18n } from '../context/I18nContext';
 
 interface CodeGeneratorModalProps {
   isOpen: boolean;
@@ -16,7 +14,6 @@ const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({ isOpen, onClose
   const [selectedPluginId, setSelectedPluginId] = useState<string>('');
   const [copied, setCopied] = useState(false);
 
-  // 初始自动选中
   useEffect(() => {
     if (isOpen && !selectedPluginId && plugins.length > 0) {
       setSelectedPluginId(plugins[0].id);
@@ -92,29 +89,26 @@ const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({ isOpen, onClose
 
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/85 backdrop-blur-xl transition-opacity" onClick={onClose} />
-      <div className="relative w-full max-w-5xl bg-zinc-900 border border-zinc-800 rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+      <div className="absolute inset-0 bg-black/60 dark:bg-black/85 backdrop-blur-xl transition-opacity" onClick={onClose} />
+      <div className="relative w-full max-w-5xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-300">
         
-        {/* Header */}
-        <div className="flex items-center justify-between px-10 py-8 border-b border-zinc-800 shrink-0">
+        <div className="flex items-center justify-between px-10 py-8 border-b border-zinc-100 dark:border-zinc-800 shrink-0 bg-zinc-50 dark:bg-transparent">
           <div className="flex items-center gap-4">
              <div className="bg-emerald-600 p-3 rounded-2xl shadow-lg shadow-emerald-600/20">
                 <Code size={24} className="text-white" />
              </div>
              <div>
-                <h2 className="text-2xl font-black text-white uppercase tracking-[0.1em]">{t('modal.generateCode')}</h2>
+                <h2 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-[0.1em]">{t('modal.generateCode')}</h2>
                 <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest mt-1 opacity-60">{recipes.length} RECIPES TOTAL</p>
              </div>
           </div>
-          <button onClick={onClose} className="p-3 text-zinc-600 hover:text-white hover:bg-zinc-800 rounded-2xl transition-all"><X size={24} /></button>
+          <button onClick={onClose} className="p-3 text-zinc-400 hover:text-zinc-900 dark:text-zinc-600 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-2xl transition-all"><X size={24} /></button>
         </div>
 
-        {/* Content Container */}
         <div className="flex-1 overflow-hidden flex flex-col p-8 lg:p-10 gap-8 min-h-0">
            
-           {/* Plugin Selector */}
            <div className="space-y-4 shrink-0">
-              <label className="text-[11px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">选择导出处理器 (PLUGIN CONFIG)</label>
+              <label className="text-[11px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em] ml-1">选择导出处理器 (PLUGIN CONFIG)</label>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
                 {plugins.length > 0 ? plugins.map(plugin => (
                   <button 
@@ -122,40 +116,39 @@ const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({ isOpen, onClose
                     onClick={() => setSelectedPluginId(plugin.id)}
                     className={`flex items-start gap-4 p-5 rounded-2xl border transition-all text-left group ${
                       (selectedPlugin && selectedPlugin.id === plugin.id) 
-                        ? 'bg-blue-600/10 border-blue-500 shadow-xl shadow-blue-600/5' 
-                        : 'bg-zinc-950/40 border-zinc-800 hover:border-zinc-700'
+                        ? 'bg-blue-600/5 dark:bg-blue-600/10 border-blue-500 shadow-xl shadow-blue-600/5' 
+                        : 'bg-zinc-50/50 dark:bg-zinc-950/40 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
                     }`}
                   >
                     <div className={`p-3 rounded-xl transition-colors ${
-                      (selectedPlugin && selectedPlugin.id === plugin.id) ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-zinc-800 text-zinc-500 group-hover:text-zinc-300'
+                      (selectedPlugin && selectedPlugin.id === plugin.id) ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-zinc-300'
                     }`}>
                        <Puzzle size={20} />
                     </div>
                     <div className="overflow-hidden">
                        <div className={`text-sm font-black uppercase tracking-wide truncate ${
-                         (selectedPlugin && selectedPlugin.id === plugin.id) ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'
+                         (selectedPlugin && selectedPlugin.id === plugin.id) ? 'text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-200'
                        }`}>{plugin.name}</div>
-                       <p className="text-[10px] text-zinc-600 truncate mt-1 font-bold">{plugin.description}</p>
+                       <p className="text-[10px] text-zinc-400 dark:text-zinc-600 truncate mt-1 font-bold">{plugin.description}</p>
                     </div>
                   </button>
                 )) : (
-                  <div className="col-span-full py-10 flex flex-col items-center justify-center border-2 border-dashed border-zinc-800 rounded-3xl opacity-30">
-                     <Puzzle size={40} className="mb-3" />
-                     <p className="text-xs font-black uppercase tracking-widest">未找到可用插件</p>
+                  <div className="col-span-full py-10 flex flex-col items-center justify-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-3xl opacity-30">
+                     <Puzzle size={40} className="mb-3 text-zinc-300 dark:text-zinc-700" />
+                     <p className="text-xs font-black uppercase tracking-widest text-zinc-400">未找到可用插件</p>
                   </div>
                 )}
               </div>
            </div>
 
-           {/* Preview Section */}
            <div className="flex-1 flex flex-col min-h-0 space-y-4">
               <div className="flex items-center justify-between ml-1 shrink-0">
-                 <label className="text-[11px] font-black text-zinc-500 uppercase tracking-[0.2em]">{t('modal.preview')}</label>
+                 <label className="text-[11px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em]">{t('modal.preview')}</label>
                  <div className="flex items-center gap-3">
                     <button 
                       onClick={handleCopy} 
                       disabled={!generatedCode}
-                      className="flex items-center gap-2 px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-20 shadow-md active:scale-95"
+                      className="flex items-center gap-2 px-5 py-2.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-20 shadow-md active:scale-95"
                     >
                       {copied ? <Check size={14} className="text-emerald-500" /> : <Clipboard size={14} />}
                       {t('common.copy')}
@@ -171,28 +164,27 @@ const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({ isOpen, onClose
                  </div>
               </div>
 
-              {/* Code Container */}
-              <div className="flex-1 bg-zinc-950 rounded-[2rem] border border-zinc-800 overflow-hidden relative shadow-inner flex flex-col">
+              <div className="flex-1 bg-zinc-50 dark:bg-zinc-950 rounded-[2rem] border border-zinc-200 dark:border-zinc-800 overflow-hidden relative shadow-inner flex flex-col">
                  {generatedCode ? (
                    <>
-                      <div className="flex items-center gap-2 px-6 py-3 bg-zinc-900/50 border-b border-zinc-800 shrink-0">
-                        <Terminal size={14} className="text-zinc-500" />
-                        <span className="text-[10px] font-mono text-zinc-500 uppercase font-black tracking-widest">Script Output Preview</span>
+                      <div className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
+                        <Terminal size={14} className="text-zinc-400 dark:text-zinc-500" />
+                        <span className="text-[10px] font-mono text-zinc-400 dark:text-zinc-500 uppercase font-black tracking-widest">Script Output Preview</span>
                       </div>
                       <div className="flex-1 overflow-auto custom-scrollbar">
                         <div className="p-8">
-                          <pre className="text-sm text-zinc-300 font-mono leading-relaxed whitespace-pre-wrap break-all">
+                          <pre className="text-sm text-zinc-700 dark:text-zinc-300 font-mono leading-relaxed whitespace-pre-wrap break-all">
                             {generatedCode}
                           </pre>
                         </div>
                       </div>
                    </>
                  ) : (
-                   <div className="flex-1 flex flex-col items-center justify-center opacity-30 gap-6">
-                      <div className="p-10 border-2 border-dashed border-zinc-800 rounded-full">
-                        <FileCode size={56} className="text-zinc-600" />
+                   <div className="flex-1 flex flex-col items-center justify-center gap-6">
+                      <div className="p-10 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-full opacity-30">
+                        <FileCode size={56} className="text-zinc-400 dark:text-zinc-600" />
                       </div>
-                      <p className="text-xs font-black uppercase tracking-[0.3em] text-zinc-500 text-center px-10">
+                      <p className="text-xs font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-500 text-center px-10 opacity-50">
                         {selectedPluginId ? '正在生成脚本预览...' : '// 请在上方选择一个导出器'}
                       </p>
                    </div>

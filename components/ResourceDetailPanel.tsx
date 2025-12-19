@@ -1,7 +1,6 @@
-
 import React, { useMemo } from 'react';
 import { useModpack } from '../context/ModpackContext';
-import { useI18n } from '../App';
+import { useI18n } from '../context/I18nContext';
 import { Resource, Recipe, RecipeProcessor } from '../types';
 import { Clipboard, Check } from 'lucide-react';
 
@@ -39,7 +38,6 @@ const ResourceDetailPanel: React.FC<ResourceDetailPanelProps> = ({ resourceId, o
     const machine = machines.find(m => m.id === recipe.machineId);
     if (!machine) return "// Error: Machine not found";
 
-    // If processor has a JS handler function, use it
     if (processor.handler && typeof processor.handler === 'function') {
         try {
             return processor.handler(recipe, machine, resources);
@@ -48,7 +46,6 @@ const ResourceDetailPanel: React.FC<ResourceDetailPanelProps> = ({ resourceId, o
         }
     }
 
-    // Fallback to basic string template
     let output = processor.template || "";
     const inputNames = recipe.inputs.map(i => `"${resources.find(r => r.id === i.resourceId)?.name || i.resourceId}"`).join(', ');
     const outputNames = recipe.outputs.map(o => `"${resources.find(r => r.id === o.resourceId)?.name || o.resourceId}"`).join(', ');

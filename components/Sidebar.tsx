@@ -1,9 +1,8 @@
-
 import React, { useState, useMemo } from 'react';
-import { Plus, Search, Cpu, Filter, Languages, Settings, Sun, Moon } from 'lucide-react';
+import { Plus, Search, Filter, Languages, Settings, Sun, Moon, Cpu } from 'lucide-react';
 import { useModpack } from '../context/ModpackContext';
 import { useTheme } from '../context/ThemeContext';
-import { useI18n } from '../App';
+import { useI18n } from '../context/I18nContext';
 
 interface SidebarProps {
   onDefineRecipe: () => void;

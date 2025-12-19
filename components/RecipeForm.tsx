@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Save, AlertCircle, Search, X, Trash2, Settings2 } from 'lucide-react';
 import { Recipe, Resource, ResourceStack, MachineDefinition, MachineSlot } from '../types';
-import { useI18n } from '../App';
+import { useI18n } from '../context/I18nContext';
 import { useNotifications } from '../context/NotificationContext';
 
 interface RecipeFormProps {
@@ -203,15 +202,15 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
             <div key={idx} className="space-y-2">
               <div className="flex justify-between items-center px-0.5">
                  <span className="text-[11px] text-zinc-500 font-bold uppercase tracking-tight">
-                   {slot.label} ({slot.type}) {slot.optional && <span className="text-zinc-600 ml-1 opacity-60">可选</span>}
+                   {slot.label} ({slot.type}) {slot.optional && <span className="text-zinc-400 dark:text-zinc-600 ml-1 opacity-60">可选</span>}
                  </span>
               </div>
               <div 
                 ref={(el) => { if(el) slotRefs.current.set(`${type}-${idx}`, el); else slotRefs.current.delete(`${type}-${idx}`); }}
-                className={`flex items-center gap-3 p-1.5 bg-zinc-950/40 rounded-xl border transition-all ${
+                className={`flex items-center gap-3 p-1.5 bg-zinc-50 dark:bg-zinc-950/40 rounded-xl border transition-all ${
                   isActive 
-                    ? 'border-blue-500 ring-2 ring-blue-500/10 bg-zinc-900' 
-                    : 'border-zinc-800 hover:border-zinc-700'
+                    ? 'border-blue-500 ring-2 ring-blue-500/10 bg-white dark:bg-zinc-900' 
+                    : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
                 }`}
               >
                 <div className={`w-1 h-8 rounded-full shrink-0 ml-1 ${
@@ -231,7 +230,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
                       newSearch[idx] = e.target.value;
                       setSearchTerms(newSearch);
                     }}
-                    className="flex-1 bg-transparent text-sm text-zinc-200 outline-none border-none p-1 placeholder:text-zinc-700 font-bold"
+                    className="flex-1 bg-transparent text-sm text-zinc-900 dark:text-zinc-200 outline-none border-none p-1 placeholder:text-zinc-300 dark:placeholder:text-zinc-700 font-bold"
                   />
                   
                   {searchTerm && (
@@ -243,23 +242,23 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
                         setSearchTerms(newSearch);
                         updateStack(idx, 'resourceId', '', setter);
                       }}
-                      className="text-zinc-600 hover:text-zinc-400 mr-1"
+                      className="text-zinc-400 hover:text-zinc-900 dark:text-zinc-600 dark:hover:text-zinc-400 mr-1"
                     >
                       <X size={14} />
                     </button>
                   )}
                 </div>
 
-                <div className="h-4 w-px bg-zinc-800 mx-1" />
+                <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 mx-1" />
                 
                 <div className="flex items-center gap-1.5 shrink-0 px-2">
                   <input
                     type="number"
                     value={stacks[idx]?.amount || 0}
                     onChange={(e) => updateStack(idx, 'amount', Number(e.target.value), setter)}
-                    className="w-10 bg-transparent border-none text-sm text-right focus:outline-none text-zinc-300 font-mono font-bold p-0"
+                    className="w-10 bg-transparent border-none text-sm text-right focus:outline-none text-zinc-600 dark:text-zinc-300 font-mono font-bold p-0"
                   />
-                  <span className="text-[10px] text-zinc-600 font-black uppercase tracking-widest">QTY</span>
+                  <span className="text-[10px] text-zinc-400 dark:text-zinc-600 font-black uppercase tracking-widest">QTY</span>
                 </div>
               </div>
             </div>
@@ -292,14 +291,14 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
           width: dropdownPos.width,
           zIndex: 9999
         }} 
-        className="bg-zinc-900 border border-zinc-800 rounded-xl shadow-[0_20px_60px_-10px_rgba(0,0,0,0.7)] max-h-56 overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-2 duration-150"
+        className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-[0_20px_60px_-10px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.7)] max-h-56 overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-2 duration-150"
       >
-        <div className="px-4 py-3 bg-zinc-900 border-b border-zinc-800/50 flex items-center justify-between">
+        <div className="px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-100 dark:border-zinc-800/50 flex items-center justify-between">
            <div className="flex items-center gap-2">
-              <Search size={12} className="text-zinc-600" />
+              <Search size={12} className="text-zinc-400 dark:text-zinc-600" />
               <span className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">{t('common.results')}</span>
            </div>
-           <span className="text-[9px] text-zinc-700 font-bold uppercase">{filteredResources.length} Found</span>
+           <span className="text-[9px] text-zinc-400 dark:text-zinc-700 font-bold uppercase">{filteredResources.length} Found</span>
         </div>
         <div className="overflow-y-auto custom-scrollbar flex-1">
           {filteredResources.length > 0 ? (
@@ -309,20 +308,20 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => handleSelectResource(type, index, r)}
-                className={`w-full text-left px-5 py-3 text-sm hover:bg-zinc-800 group flex flex-col transition-all border-b border-zinc-800/30 last:border-none ${
-                  stacks[index]?.resourceId === r.id ? 'bg-blue-600/10' : ''
+                className={`w-full text-left px-5 py-3 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 group flex flex-col transition-all border-b border-zinc-100 dark:border-zinc-800/30 last:border-none ${
+                  stacks[index]?.resourceId === r.id ? 'bg-blue-600/5 dark:bg-blue-600/10' : ''
                 }`}
               >
-                <span className={`font-bold transition-colors ${stacks[index]?.resourceId === r.id ? 'text-blue-400' : 'text-zinc-200 group-hover:text-blue-400'}`}>
+                <span className={`font-bold transition-colors ${stacks[index]?.resourceId === r.id ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-700 dark:text-zinc-200 group-hover:text-blue-600 dark:group-hover:text-blue-400'}`}>
                   {r.name}
                 </span>
-                <span className="text-[11px] text-zinc-600 font-mono mt-0.5 uppercase tracking-tighter">
+                <span className="text-[11px] text-zinc-400 dark:text-zinc-600 font-mono mt-0.5 uppercase tracking-tighter">
                   ID: {r.id}
                 </span>
               </button>
             ))
           ) : (
-            <div className="px-6 py-10 text-xs text-zinc-600 text-center italic flex flex-col items-center gap-3">
+            <div className="px-6 py-10 text-xs text-zinc-400 text-center italic flex flex-col items-center gap-3">
               <AlertCircle size={20} className="opacity-10" />
               <span>{t('common.noResults')}</span>
             </div>
@@ -337,12 +336,12 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
     if (!machine.metadataSchema || machine.metadataSchema.length === 0) return null;
 
     return (
-      <div className="pt-8 mt-4 border-t border-zinc-800/50">
+      <div className="pt-8 mt-4 border-t border-zinc-100 dark:border-zinc-800/50">
         <div className="flex items-center gap-3 mb-6">
           <Settings2 size={16} className="text-blue-500" />
-          <h4 className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.2em]">{t('form.extraMetadata') || 'Recipe Properties'}</h4>
+          <h4 className="text-[11px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.2em]">{t('form.extraMetadata') || 'Recipe Properties'}</h4>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-zinc-950/20 p-6 rounded-2xl border border-zinc-800/50">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-zinc-50 dark:bg-zinc-950/20 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800/50">
           {machine.metadataSchema.map((field) => (
             <div key={field.key} className="space-y-2">
               <label className="block text-[11px] font-black text-zinc-500 uppercase tracking-widest ml-1">{field.label}</label>
@@ -351,7 +350,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
                   type="text"
                   value={metadata[field.key] || ''}
                   onChange={(e) => updateMetadata(field.key, e.target.value)}
-                  className="w-full bg-zinc-950/60 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-1 focus:ring-blue-500 outline-none font-bold"
+                  className="w-full bg-white dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-900 dark:text-white focus:ring-1 focus:ring-blue-500 outline-none font-bold shadow-sm"
                   placeholder={`Enter ${field.label.toLowerCase()}...`}
                 />
               )}
@@ -360,11 +359,11 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
                   type="number"
                   value={metadata[field.key] || 0}
                   onChange={(e) => updateMetadata(field.key, Number(e.target.value))}
-                  className="w-full bg-zinc-950/60 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-1 focus:ring-blue-500 outline-none font-mono font-bold"
+                  className="w-full bg-white dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-900 dark:text-white focus:ring-1 focus:ring-blue-500 outline-none font-mono font-bold shadow-sm"
                 />
               )}
               {field.type === 'boolean' && (
-                <div className="flex items-center gap-3 bg-zinc-950/60 border border-zinc-800 rounded-xl px-4 py-2.5 h-[42px]">
+                <div className="flex items-center gap-3 bg-white dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 h-[42px] shadow-sm">
                    <label className="relative inline-flex items-center cursor-pointer flex-1">
                       <input 
                         type="checkbox" 
@@ -372,8 +371,8 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
                         onChange={(e) => updateMetadata(field.key, e.target.checked)} 
                         className="sr-only peer" 
                       />
-                      <div className="w-10 h-5 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-zinc-600 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-600 peer-checked:after:bg-white"></div>
-                      <span className="ml-3 text-[10px] font-black text-zinc-400 uppercase tracking-widest">{metadata[field.key] ? 'ENABLED' : 'DISABLED'}</span>
+                      <div className="w-10 h-5 bg-zinc-200 dark:bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-zinc-400 dark:after:bg-zinc-600 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-600 peer-checked:after:bg-white"></div>
+                      <span className="ml-3 text-[10px] font-black text-zinc-500 uppercase tracking-widest">{metadata[field.key] ? 'ENABLED' : 'DISABLED'}</span>
                    </label>
                 </div>
               )}
@@ -383,10 +382,10 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
                     type="text"
                     value={metadata[field.key] || '#ffffff'}
                     onChange={(e) => updateMetadata(field.key, e.target.value)}
-                    className="flex-1 bg-zinc-950/60 border border-zinc-800 rounded-xl px-4 py-2.5 text-[10px] font-mono font-bold text-white focus:ring-1 focus:ring-blue-500 outline-none h-[42px]"
+                    className="flex-1 bg-white dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 text-[10px] font-mono font-bold text-zinc-900 dark:text-white focus:ring-1 focus:ring-blue-500 outline-none h-[42px] shadow-sm"
                   />
                   <div className="relative w-10 h-[42px] shrink-0">
-                    <div className="absolute inset-0 rounded-xl border border-zinc-800 shadow-inner" style={{ backgroundColor: metadata[field.key] || '#ffffff' }} />
+                    <div className="absolute inset-0 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-inner" style={{ backgroundColor: metadata[field.key] || '#ffffff' }} />
                     <input 
                       type="color" 
                       value={metadata[field.key] || '#ffffff'} 
@@ -405,16 +404,16 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
 
   return (
     <form ref={containerRef} onSubmit={handleSubmit} className="space-y-8">
-      <div className="flex items-center gap-6 bg-zinc-950/40 p-6 rounded-2xl border border-zinc-800 shadow-xl">
-        <div className="w-16 h-16 bg-zinc-900 rounded-2xl flex items-center justify-center font-black text-2xl text-zinc-700 border border-zinc-800 shadow-inner">
+      <div className="flex items-center gap-6 bg-zinc-50 dark:bg-zinc-950/40 p-6 rounded-2xl border border-zinc-100 dark:border-zinc-800 shadow-xl">
+        <div className="w-16 h-16 bg-white dark:bg-zinc-900 rounded-2xl flex items-center justify-center font-black text-2xl text-zinc-300 dark:text-zinc-700 border border-zinc-200 dark:border-zinc-800 shadow-inner">
           {machine.name[0]}
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-1">
-            <h3 className="font-black text-white text-xl uppercase tracking-wide">
+            <h3 className="font-black text-zinc-900 dark:text-white text-xl uppercase tracking-wide">
               {machine.name}
             </h3>
-            <span className="text-[10px] bg-zinc-800 px-2 py-1 rounded-lg text-zinc-400 font-black uppercase border border-zinc-700 tracking-widest">{t('common.machine')}</span>
+            <span className="text-[10px] bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-lg text-zinc-500 dark:text-zinc-400 font-black uppercase border border-zinc-200 dark:border-zinc-700 tracking-widest">{t('common.machine')}</span>
           </div>
           <p className="text-sm text-zinc-500 font-medium leading-relaxed">{machine.description}</p>
         </div>
@@ -431,7 +430,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
               setName(e.target.value);
               isUserEditingName.current = true;
             }}
-            className="w-full bg-zinc-950/60 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-zinc-800 font-bold shadow-inner h-[52px]"
+            className="w-full bg-white dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-zinc-900 dark:text-white focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-zinc-200 dark:placeholder:text-zinc-800 font-bold shadow-inner h-[52px]"
             placeholder={t('form.recipeIdPlaceholder')}
           />
         </div>
@@ -442,25 +441,25 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
               type="number"
               value={duration}
               onChange={(e) => setDuration(Number(e.target.value))}
-              className="w-full bg-zinc-950/60 border border-zinc-800 rounded-xl px-4 py-3 text-white outline-none focus:ring-1 focus:ring-blue-500 transition-all font-mono font-bold shadow-inner h-[52px]"
+              className="w-full bg-white dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-zinc-900 dark:text-white outline-none focus:ring-1 focus:ring-blue-500 transition-all font-mono font-bold shadow-inner h-[52px]"
             />
-            <span className="absolute right-4 top-4 text-[10px] font-black text-zinc-700 tracking-widest">TICKS</span>
+            <span className="absolute right-4 top-4 text-[10px] font-black text-zinc-300 dark:text-zinc-700 tracking-widest">TICKS</span>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 pt-4">
         <div>
-          {renderFixedSlots(machine.inputs, inputs, inputSearch, setInputSearch, setInputs, 'input', t('form.inputs'), 'text-emerald-500')}
+          {renderFixedSlots(machine.inputs, inputs, inputSearch, setInputSearch, setInputs, 'input', t('form.inputs'), 'text-emerald-600 dark:text-emerald-500')}
         </div>
         <div>
-          {renderFixedSlots(machine.outputs, outputs, outputSearch, setOutputSearch, setOutputs, 'output', t('form.outputs'), 'text-orange-500')}
+          {renderFixedSlots(machine.outputs, outputs, outputSearch, setOutputSearch, setOutputs, 'output', t('form.outputs'), 'text-orange-600 dark:text-orange-500')}
         </div>
       </div>
 
       {renderMetadataFields()}
 
-      <div className="flex items-center gap-6 pt-10 border-t border-zinc-800 mt-4">
+      <div className="flex items-center gap-6 pt-10 border-t border-zinc-100 dark:border-zinc-800 mt-4">
         {initialRecipe && onDelete && (
           <button
             type="button"
@@ -469,7 +468,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
                 onDelete(initialRecipe.id);
               }
             }}
-            className="text-sm font-black text-red-500 hover:text-red-400 transition-all px-2 mr-auto flex items-center gap-2 group uppercase tracking-widest"
+            className="text-sm font-black text-red-500 hover:text-red-600 transition-all px-2 mr-auto flex items-center gap-2 group uppercase tracking-widest"
           >
             <Trash2 size={18} className="group-hover:scale-110 transition-transform" /> {t('common.delete')}
           </button>
@@ -478,7 +477,7 @@ const RecipeForm: React.FC<RecipeFormProps> = ({ resources, machine, initialReci
         <button
           type="button"
           onClick={onCancel}
-          className="text-sm font-black text-zinc-600 hover:text-zinc-300 transition-colors px-4 uppercase tracking-widest"
+          className="text-sm font-black text-zinc-400 hover:text-zinc-600 dark:text-zinc-600 dark:hover:text-zinc-300 transition-colors px-4 uppercase tracking-widest"
         >
           {t('common.cancel')}
         </button>

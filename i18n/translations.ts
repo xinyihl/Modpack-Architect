@@ -1,4 +1,3 @@
-
 export const translations = {
   'en-US': {
     common: {

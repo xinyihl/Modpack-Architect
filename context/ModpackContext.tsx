@@ -4,7 +4,7 @@ import { Resource, Recipe, ResourceCategory, MachineDefinition, SyncSettings, Sy
 import { INITIAL_MACHINES } from '../constants/machines';
 import { useNotifications } from './NotificationContext';
 import { getAllFromStore, saveToStore, deleteFromStore, clearStore } from '../utils/db';
-import { translations } from '../translations';
+import { translations } from '../i18n/translations';
 
 interface ModpackContextType {
   categories: ResourceCategory[];
@@ -59,7 +59,7 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // 定义内置的标准导出插件，确保 handler 接收所有必要的参数
+  // 定义内置的标准导出插件
   const builtInPlugin = useMemo((): Plugin => ({
     id: 'builtin-standard',
     name: '内置标准导出器',
@@ -81,7 +81,6 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }))
   }), [machines]);
 
-  // 合并插件列表
   const plugins = useMemo(() => [builtInPlugin, ...pluginsState], [builtInPlugin, pluginsState]);
 
   const getLocale = useCallback(() => {
@@ -202,7 +201,8 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const deleteResource = (id: string) => {
     const used = recipes.filter(r => r.inputs.some(i => i.resourceId === id) || r.outputs.some(o => o.resourceId === id));
     if (used.length > 0) {
-      showNotification('error', '操作受阻', translations[getLocale()].management.errors.resourceUsed.replace('{count}', String(used.length)));
+      const currentLocale = getLocale();
+      showNotification('error', '操作受阻', translations[currentLocale].management.errors.resourceUsed.replace('{count}', String(used.length)));
       return;
     }
     setResourcesState(prev => {
@@ -246,7 +246,8 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const rU = resources.filter(r => r.type === id);
     const mU = machines.filter(m => m.inputs.some(i => i.type === id) || m.outputs.some(o => o.type === id));
     if (rU.length > 0 || mU.length > 0) {
-      showNotification('error', '操作受阻', translations[getLocale()].management.errors.categoryUsed.replace('{count}', String(rU.length + mU.length)));
+      const currentLocale = getLocale();
+      showNotification('error', '操作受阻', translations[currentLocale].management.errors.categoryUsed.replace('{count}', String(rU.length + mU.length)));
       return;
     }
     setCategoriesState(prev => {
@@ -274,7 +275,8 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const deleteMachine = (id: string) => {
     const used = recipes.filter(r => r.machineId === id);
     if (used.length > 0) {
-      showNotification('error', '操作受阻', translations[getLocale()].management.errors.machineUsed.replace('{count}', String(used.length)));
+      const currentLocale = getLocale();
+      showNotification('error', '操作受阻', translations[currentLocale].management.errors.machineUsed.replace('{count}', String(used.length)));
       return;
     }
     setMachinesState(prev => {
