@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { X, Code, Clipboard, Check, Download, Puzzle, FileCode, Terminal } from 'lucide-react';
 import { useModpack } from '../context/ModpackContext';
 import { useI18n } from '../App';
@@ -16,8 +16,15 @@ const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({ isOpen, onClose
   const [selectedPluginId, setSelectedPluginId] = useState<string>('');
   const [copied, setCopied] = useState(false);
 
+  // 初始自动选中
+  useEffect(() => {
+    if (isOpen && !selectedPluginId && plugins.length > 0) {
+      setSelectedPluginId(plugins[0].id);
+    }
+  }, [isOpen, plugins, selectedPluginId]);
+
   const selectedPlugin = useMemo(() => {
-    return plugins.find(p => p.id === selectedPluginId);
+    return plugins.find(p => p.id === selectedPluginId) || (plugins.length > 0 ? plugins[0] : null);
   }, [plugins, selectedPluginId]);
 
   const generatedCode = useMemo(() => {
@@ -28,22 +35,20 @@ const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({ isOpen, onClose
     const snippets: string[] = [];
     
     recipes.forEach(recipe => {
-      // Find a processor in the selected plugin that targets this recipe's machine
       const processor = selectedPlugin.processors.find(p => p.machineId === recipe.machineId);
-      
-      if (!processor) return; // Skip if no processor defined for this machine in the plugin
+      if (!processor) return;
 
       const machine = machines.find(m => m.id === recipe.machineId);
       if (!machine) {
-        snippets.push(`// Error: Machine definition for "${recipe.machineId}" not found for recipe ${recipe.id}`);
+        snippets.push(`// Error: 未找到机器定义 "${recipe.machineId}"，对应配方 ID: ${recipe.id}`);
         return;
       }
 
       try {
         if (processor.handler) {
-          snippets.push(processor.handler(recipe, machine, resources));
+          const result = processor.handler(recipe, machine, resources);
+          if (result) snippets.push(result);
         } else if (processor.template) {
-          // Template Fallback
           let output = processor.template || "";
           const inputIds = recipe.inputs.map(i => `"${i.resourceId}"`).join(', ');
           const outputIds = recipe.outputs.map(o => `"${o.resourceId}"`).join(', ');
@@ -54,12 +59,12 @@ const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({ isOpen, onClose
           snippets.push(output);
         }
       } catch (e) {
-        snippets.push(`// Processor Error on recipe ${recipe.id}: ${e instanceof Error ? e.message : 'Unknown'}`);
+        snippets.push(`// 处理器执行错误 (${recipe.id}): ${e instanceof Error ? e.message : '未知错误'}`);
       }
     });
 
     if (snippets.length === 0) {
-      return header + "// No recipes found for the machines supported by this plugin.";
+      return header + "// 所选处理器的支持范围内未找到对应的配方。";
     }
 
     return header + snippets.join('\n\n');
@@ -78,7 +83,7 @@ const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({ isOpen, onClose
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `exported_recipes_${selectedPluginId || 'mod'}.js`;
+    link.download = `recipes_export_${selectedPluginId || 'mod'}.js`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -87,9 +92,10 @@ const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({ isOpen, onClose
 
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-xl transition-opacity" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/85 backdrop-blur-xl transition-opacity" onClick={onClose} />
       <div className="relative w-full max-w-5xl bg-zinc-900 border border-zinc-800 rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-300">
         
+        {/* Header */}
         <div className="flex items-center justify-between px-10 py-8 border-b border-zinc-800 shrink-0">
           <div className="flex items-center gap-4">
              <div className="bg-emerald-600 p-3 rounded-2xl shadow-lg shadow-emerald-600/20">
@@ -97,51 +103,59 @@ const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({ isOpen, onClose
              </div>
              <div>
                 <h2 className="text-2xl font-black text-white uppercase tracking-[0.1em]">{t('modal.generateCode')}</h2>
-                <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest mt-1 opacity-60">{recipes.length} Recipes Total</p>
+                <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest mt-1 opacity-60">{recipes.length} RECIPES TOTAL</p>
              </div>
           </div>
           <button onClick={onClose} className="p-3 text-zinc-600 hover:text-white hover:bg-zinc-800 rounded-2xl transition-all"><X size={24} /></button>
         </div>
 
-        <div className="flex-1 overflow-hidden flex flex-col p-10 gap-10">
+        {/* Content Container */}
+        <div className="flex-1 overflow-hidden flex flex-col p-8 lg:p-10 gap-8 min-h-0">
+           
+           {/* Plugin Selector */}
            <div className="space-y-4 shrink-0">
-              <label className="text-[11px] font-black text-zinc-500 uppercase tracking-widest ml-1">Select Plugin Config</label>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+              <label className="text-[11px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">选择导出处理器 (PLUGIN CONFIG)</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
                 {plugins.length > 0 ? plugins.map(plugin => (
                   <button 
                     key={plugin.id} 
                     onClick={() => setSelectedPluginId(plugin.id)}
-                    className={`flex items-start gap-4 p-5 rounded-2xl border transition-all text-left ${
-                      selectedPluginId === plugin.id 
+                    className={`flex items-start gap-4 p-5 rounded-2xl border transition-all text-left group ${
+                      (selectedPlugin && selectedPlugin.id === plugin.id) 
                         ? 'bg-blue-600/10 border-blue-500 shadow-xl shadow-blue-600/5' 
                         : 'bg-zinc-950/40 border-zinc-800 hover:border-zinc-700'
                     }`}
                   >
-                    <div className={`p-3 rounded-xl ${selectedPluginId === plugin.id ? 'bg-blue-600 text-white' : 'bg-zinc-800 text-zinc-500'}`}>
+                    <div className={`p-3 rounded-xl transition-colors ${
+                      (selectedPlugin && selectedPlugin.id === plugin.id) ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-zinc-800 text-zinc-500 group-hover:text-zinc-300'
+                    }`}>
                        <Puzzle size={20} />
                     </div>
-                    <div>
-                       <div className={`text-sm font-black uppercase tracking-wide ${selectedPluginId === plugin.id ? 'text-white' : 'text-zinc-300'}`}>{plugin.name}</div>
-                       <p className="text-[10px] text-zinc-500 line-clamp-1 mt-0.5">{plugin.description}</p>
+                    <div className="overflow-hidden">
+                       <div className={`text-sm font-black uppercase tracking-wide truncate ${
+                         (selectedPlugin && selectedPlugin.id === plugin.id) ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'
+                       }`}>{plugin.name}</div>
+                       <p className="text-[10px] text-zinc-600 truncate mt-1 font-bold">{plugin.description}</p>
                     </div>
                   </button>
                 )) : (
                   <div className="col-span-full py-10 flex flex-col items-center justify-center border-2 border-dashed border-zinc-800 rounded-3xl opacity-30">
                      <Puzzle size={40} className="mb-3" />
-                     <p className="text-xs font-black uppercase tracking-widest">No Plugins Available</p>
+                     <p className="text-xs font-black uppercase tracking-widest">未找到可用插件</p>
                   </div>
                 )}
               </div>
            </div>
 
-           <div className="flex-1 min-h-0 flex flex-col space-y-4">
-              <div className="flex items-center justify-between ml-1">
-                 <label className="text-[11px] font-black text-zinc-500 uppercase tracking-widest">{t('modal.preview')}</label>
+           {/* Preview Section */}
+           <div className="flex-1 flex flex-col min-h-0 space-y-4">
+              <div className="flex items-center justify-between ml-1 shrink-0">
+                 <label className="text-[11px] font-black text-zinc-500 uppercase tracking-[0.2em]">{t('modal.preview')}</label>
                  <div className="flex items-center gap-3">
                     <button 
                       onClick={handleCopy} 
                       disabled={!generatedCode}
-                      className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-30"
+                      className="flex items-center gap-2 px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-20 shadow-md active:scale-95"
                     >
                       {copied ? <Check size={14} className="text-emerald-500" /> : <Clipboard size={14} />}
                       {t('common.copy')}
@@ -149,33 +163,37 @@ const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({ isOpen, onClose
                     <button 
                       onClick={handleDownload}
                       disabled={!generatedCode}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 disabled:opacity-30"
+                      className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-600/20 disabled:opacity-20 active:scale-95"
                     >
                       <Download size={14} />
                       {t('common.download')}
                     </button>
                  </div>
               </div>
-              <div className="flex-1 bg-zinc-950 rounded-3xl border border-zinc-800 overflow-hidden relative shadow-inner">
+
+              {/* Code Container */}
+              <div className="flex-1 bg-zinc-950 rounded-[2rem] border border-zinc-800 overflow-hidden relative shadow-inner flex flex-col">
                  {generatedCode ? (
-                   <div className="absolute inset-0 flex flex-col">
-                      <div className="flex items-center gap-2 px-6 py-3 bg-zinc-900 border-b border-zinc-800">
+                   <>
+                      <div className="flex items-center gap-2 px-6 py-3 bg-zinc-900/50 border-b border-zinc-800 shrink-0">
                         <Terminal size={14} className="text-zinc-500" />
-                        <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Script Output Preview</span>
+                        <span className="text-[10px] font-mono text-zinc-500 uppercase font-black tracking-widest">Script Output Preview</span>
                       </div>
-                      <div className="flex-1 overflow-auto custom-scrollbar p-8">
-                        <pre className="text-xs text-zinc-400 font-mono leading-relaxed whitespace-pre-wrap">
-                          {generatedCode}
-                        </pre>
+                      <div className="flex-1 overflow-auto custom-scrollbar">
+                        <div className="p-8">
+                          <pre className="text-sm text-zinc-300 font-mono leading-relaxed whitespace-pre-wrap break-all">
+                            {generatedCode}
+                          </pre>
+                        </div>
                       </div>
-                   </div>
+                   </>
                  ) : (
-                   <div className="absolute inset-0 flex flex-col items-center justify-center opacity-30 gap-4">
-                      <div className="p-8 border-2 border-dashed border-zinc-800 rounded-full">
-                        <FileCode size={48} className="text-zinc-500" />
+                   <div className="flex-1 flex flex-col items-center justify-center opacity-30 gap-6">
+                      <div className="p-10 border-2 border-dashed border-zinc-800 rounded-full">
+                        <FileCode size={56} className="text-zinc-600" />
                       </div>
-                      <p className="text-xs font-black uppercase tracking-widest text-zinc-500">
-                        {selectedPluginId ? 'Loading preview...' : '// Select a plugin to see preview output'}
+                      <p className="text-xs font-black uppercase tracking-[0.3em] text-zinc-500 text-center px-10">
+                        {selectedPluginId ? '正在生成脚本预览...' : '// 请在上方选择一个导出器'}
                       </p>
                    </div>
                  )}

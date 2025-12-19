@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Resource, Recipe, ResourceCategory, MachineDefinition, SyncSettings, SyncStatus, ModpackData, Plugin, RecipeProcessor } from '../types';
 import { INITIAL_MACHINES } from '../constants/machines';
 import { useNotifications } from './NotificationContext';
@@ -55,13 +55,36 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [resources, setResourcesState] = useState<Resource[]>(INITIAL_RESOURCES);
   const [recipes, setRecipesState] = useState<Recipe[]>([]);
   const [machines, setMachinesState] = useState<MachineDefinition[]>(INITIAL_MACHINES);
-  const [plugins, setPluginsState] = useState<Plugin[]>([]);
+  const [pluginsState, setPluginsState] = useState<Plugin[]>([]);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Helper to get localized text manually for context
+  // 定义内置的标准导出插件，确保 handler 接收所有必要的参数
+  const builtInPlugin = useMemo((): Plugin => ({
+    id: 'builtin-standard',
+    name: '内置标准导出器',
+    description: '通用的脚本/JSON 导出方案，支持所有已注册机器。',
+    version: '1.0.0',
+    scriptContent: '',
+    machines: [],
+    processors: machines.map(m => ({
+        id: `builtin-${m.id}`,
+        name: `${m.name} 处理程序`,
+        description: `针对 ${m.name} 的标准导出逻辑`,
+        machineId: m.id,
+        handler: (recipe: Recipe, machine: MachineDefinition, resources: Resource[]) => {
+            const getResName = (id: string) => resources.find(r => r.id === id)?.name || id;
+            const inputs = recipe.inputs.map(i => `"${getResName(i.resourceId)}" (${i.amount})`).join(', ');
+            const outputs = recipe.outputs.map(o => `"${getResName(o.resourceId)}" (${o.amount})`).join(', ');
+            return `// 配方: ${recipe.name}\n// 机器: ${machine.name}\nrecipe.add("${machine.id}", [${outputs}], [${inputs}], ${recipe.duration || 100});`;
+        }
+    }))
+  }), [machines]);
+
+  // 合并插件列表
+  const plugins = useMemo(() => [builtInPlugin, ...pluginsState], [builtInPlugin, pluginsState]);
+
   const getLocale = useCallback(() => {
-     // Default to zh-CN if can't find. Simplified for this app.
      return (document.documentElement.lang || 'zh-CN') as 'en-US' | 'zh-CN';
   }, []);
 
@@ -79,22 +102,21 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const ws = useRef<WebSocket | null>(null);
   const isInternalChange = useRef(false);
 
-  // Helper to evaluate plugin script safely
   const evaluatePlugin = useCallback((script: string): Plugin | null => {
     try {
+      if (!script) return null;
       const factory = new Function(script);
       const result = factory();
       if (result && result.id && result.name && Array.isArray(result.machines) && Array.isArray(result.processors)) {
         return { ...result, scriptContent: script };
       }
-      throw new Error("Invalid plugin structure. Ensure it returns an object with id, name, machines, and processors.");
+      return null;
     } catch (e) {
-      showNotification('error', 'Plugin Error', e instanceof Error ? e.message : 'Unknown script error');
+      console.error('Plugin compilation failed', e);
       return null;
     }
-  }, [showNotification]);
+  }, []);
 
-  // Load from IndexedDB on startup
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -103,34 +125,26 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
           getAllFromStore<Resource>('resources'),
           getAllFromStore<Recipe>('recipes'),
           getAllFromStore<MachineDefinition>('machines'),
-          getAllFromStore<Plugin>('plugins'),
+          getAllFromStore<any>('plugins'),
         ]);
 
         if (dbCats.length > 0) setCategoriesState(dbCats);
-        else for (const cat of INITIAL_CATEGORIES) await saveToStore('categories', cat);
-
         if (dbRes.length > 0) setResourcesState(dbRes);
-        else for (const res of INITIAL_RESOURCES) await saveToStore('resources', res);
-
         if (dbMacs.length > 0) setMachinesState(dbMacs);
-        else for (const mac of INITIAL_MACHINES) await saveToStore('machines', mac);
-
         if (dbRecs.length > 0) setRecipesState(dbRecs);
 
-        const evaluatedPlugins: Plugin[] = [];
+        const evaluated: Plugin[] = [];
         dbPlugins.forEach(p => {
           const evaled = evaluatePlugin(p.scriptContent);
-          if (evaled) evaluatedPlugins.push(evaled);
+          if (evaled) evaluated.push(evaled);
         });
-        setPluginsState(evaluatedPlugins);
-
+        setPluginsState(evaluated);
         setIsInitialized(true);
       } catch (error) {
         console.error('Failed to load data', error);
         setIsInitialized(true); 
       }
     };
-
     loadData();
   }, [evaluatePlugin]);
 
@@ -147,16 +161,13 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [syncSettings.username]);
 
   const triggerSync = useCallback(() => {
-    broadcastState({ categories, resources, recipes, machines, plugins });
-  }, [broadcastState, categories, resources, recipes, machines, plugins]);
+    broadcastState({ categories, resources, recipes, machines, plugins: pluginsState });
+  }, [broadcastState, categories, resources, recipes, machines, pluginsState]);
 
   const wrapUpdate = useCallback((data: ModpackData) => {
-    if (!isInternalChange.current) {
-      broadcastState(data);
-    }
+    if (!isInternalChange.current) broadcastState(data);
   }, [broadcastState]);
 
-  // Setters
   const setCategories = (cats: ResourceCategory[]) => {
     setCategoriesState(cats);
     clearStore('categories').then(() => cats.forEach(c => saveToStore('categories', c)));
@@ -174,37 +185,30 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
     clearStore('machines').then(() => macs.forEach(m => saveToStore('machines', m)));
   };
 
-  // Operations
   const addResource = (res: Resource) => setResourcesState(prev => {
     const next = [...prev, res];
     saveToStore('resources', res);
-    wrapUpdate({ categories, resources: next, recipes, machines, plugins });
+    wrapUpdate({ categories, resources: next, recipes, machines, plugins: pluginsState });
     return next;
   });
 
   const updateResource = (res: Resource) => setResourcesState(prev => {
     const next = prev.map(r => r.id === res.id ? res : r);
     saveToStore('resources', res);
-    wrapUpdate({ categories, resources: next, recipes, machines, plugins });
+    wrapUpdate({ categories, resources: next, recipes, machines, plugins: pluginsState });
     return next;
   });
 
   const deleteResource = (id: string) => {
-    const usedInRecipes = recipes.filter(r => 
-      r.inputs.some(i => i.resourceId === id) || 
-      r.outputs.some(o => o.resourceId === id)
-    );
-
-    if (usedInRecipes.length > 0) {
-      const msg = translations[getLocale()].management.errors.resourceUsed.replace('{count}', String(usedInRecipes.length));
-      showNotification('error', 'Action Blocked', msg);
+    const used = recipes.filter(r => r.inputs.some(i => i.resourceId === id) || r.outputs.some(o => o.resourceId === id));
+    if (used.length > 0) {
+      showNotification('error', '操作受阻', translations[getLocale()].management.errors.resourceUsed.replace('{count}', String(used.length)));
       return;
     }
-
     setResourcesState(prev => {
       const next = prev.filter(r => r.id !== id);
       deleteFromStore('resources', id);
-      wrapUpdate({ categories, resources: next, recipes, machines, plugins });
+      wrapUpdate({ categories, resources: next, recipes, machines, plugins: pluginsState });
       return next;
     });
   };
@@ -213,49 +217,42 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const idx = prev.findIndex(r => r.id === recipe.id);
     const next = idx >= 0 ? prev.map((r, i) => i === idx ? recipe : r) : [...prev, recipe];
     saveToStore('recipes', recipe);
-    wrapUpdate({ categories, resources, recipes: next, machines, plugins });
+    wrapUpdate({ categories, resources, recipes: next, machines, plugins: pluginsState });
     return next;
   });
 
   const deleteRecipe = (id: string) => setRecipesState(prev => {
     const next = prev.filter(r => r.id !== id);
     deleteFromStore('recipes', id);
-    wrapUpdate({ categories, resources, recipes: next, machines, plugins });
+    wrapUpdate({ categories, resources, recipes: next, machines, plugins: pluginsState });
     return next;
   });
 
   const addCategory = (cat: ResourceCategory) => setCategoriesState(prev => {
     const next = [...prev, cat];
     saveToStore('categories', cat);
-    wrapUpdate({ categories: next, resources, recipes, machines, plugins });
+    wrapUpdate({ categories: next, resources, recipes, machines, plugins: pluginsState });
     return next;
   });
 
   const updateCategory = (cat: ResourceCategory) => setCategoriesState(prev => {
     const next = prev.map(c => c.id === cat.id ? cat : c);
     saveToStore('categories', cat);
-    wrapUpdate({ categories: next, resources, recipes, machines, plugins });
+    wrapUpdate({ categories: next, resources, recipes, machines, plugins: pluginsState });
     return next;
   });
 
   const deleteCategory = (id: string) => {
-    const resourcesUsing = resources.filter(r => r.type === id);
-    const machinesUsing = machines.filter(m => 
-      m.inputs.some(i => i.type === id) || 
-      m.outputs.some(o => o.type === id)
-    );
-
-    if (resourcesUsing.length > 0 || machinesUsing.length > 0) {
-      const count = resourcesUsing.length + machinesUsing.length;
-      const msg = translations[getLocale()].management.errors.categoryUsed.replace('{count}', String(count));
-      showNotification('error', 'Action Blocked', msg);
+    const rU = resources.filter(r => r.type === id);
+    const mU = machines.filter(m => m.inputs.some(i => i.type === id) || m.outputs.some(o => o.type === id));
+    if (rU.length > 0 || mU.length > 0) {
+      showNotification('error', '操作受阻', translations[getLocale()].management.errors.categoryUsed.replace('{count}', String(rU.length + mU.length)));
       return;
     }
-
     setCategoriesState(prev => {
       const next = prev.filter(c => c.id !== id);
       deleteFromStore('categories', id);
-      wrapUpdate({ categories: next, resources, recipes, machines, plugins });
+      wrapUpdate({ categories: next, resources, recipes, machines, plugins: pluginsState });
       return next;
     });
   };
@@ -263,117 +260,95 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const addMachine = (m: MachineDefinition) => setMachinesState(prev => {
     const next = [...prev, m];
     saveToStore('machines', m);
-    wrapUpdate({ categories, resources, recipes, machines: next, plugins });
+    wrapUpdate({ categories, resources, recipes, machines: next, plugins: pluginsState });
     return next;
   });
 
   const updateMachine = (m: MachineDefinition) => setMachinesState(prev => {
     const next = prev.map(old => old.id === m.id ? m : old);
     saveToStore('machines', m);
-    wrapUpdate({ categories, resources, recipes, machines: next, plugins });
+    wrapUpdate({ categories, resources, recipes, machines: next, plugins: pluginsState });
     return next;
   });
 
   const deleteMachine = (id: string) => {
-    const recipesUsing = recipes.filter(r => r.machineId === id);
-    
-    if (recipesUsing.length > 0) {
-      const msg = translations[getLocale()].management.errors.machineUsed.replace('{count}', String(recipesUsing.length));
-      showNotification('error', 'Action Blocked', msg);
+    const used = recipes.filter(r => r.machineId === id);
+    if (used.length > 0) {
+      showNotification('error', '操作受阻', translations[getLocale()].management.errors.machineUsed.replace('{count}', String(used.length)));
       return;
     }
-
     setMachinesState(prev => {
       const next = prev.filter(m => m.id !== id);
       deleteFromStore('machines', id);
-      wrapUpdate({ categories, resources, recipes, machines: next, plugins });
+      wrapUpdate({ categories, resources, recipes, machines: next, plugins: pluginsState });
       return next;
     });
   };
 
-  // Plugin System logic
   const addPlugin = (script: string) => {
     const plugin = evaluatePlugin(script);
-    if (!plugin) return;
-
+    if (!plugin) {
+      showNotification('error', '加载失败', '插件脚本无效或格式不正确。');
+      return;
+    }
     setPluginsState(prev => {
-      const filtered = prev.filter(p => p.id !== plugin.id);
-      const next = [...filtered, plugin];
+      const next = [...prev.filter(p => p.id !== plugin.id), plugin];
       saveToStore('plugins', { id: plugin.id, scriptContent: script });
-
       setMachinesState(mPrev => {
         const mNext = [...mPrev];
         plugin.machines.forEach(pm => {
-          const idx = mNext.findIndex(existing => existing.id === pm.id);
-          if (idx >= 0) mNext[idx] = pm;
-          else mNext.push(pm);
+          const idx = mNext.findIndex(ex => ex.id === pm.id);
+          if (idx >= 0) mNext[idx] = pm; else mNext.push(pm);
           saveToStore('machines', pm);
         });
         return mNext;
       });
-
-      wrapUpdate({ categories, resources, recipes, machines, plugins: next });
       return next;
     });
-    showNotification('success', 'Plugin Loaded', `Successfully compiled plugin: ${plugin.name}`);
+    showNotification('success', '插件已加载', `成功导入插件: ${plugin.name}`);
   };
 
   const removePlugin = (id: string) => {
     setPluginsState(prev => {
       const next = prev.filter(p => p.id !== id);
       deleteFromStore('plugins', id);
-      wrapUpdate({ categories, resources, recipes, machines, plugins: next });
       return next;
     });
-    showNotification('info', 'Plugin Uninstalled', 'Processors removed.');
+    showNotification('info', '插件已卸载', '相关的处理器已被移除。');
   };
 
   useEffect(() => {
     localStorage.setItem('sync_settings', JSON.stringify(syncSettings));
     if (syncSettings.enabled && syncSettings.apiUrl) {
-      let socket: WebSocket | null = null;
-      let wsUrl = syncSettings.apiUrl.trim();
-      if (wsUrl.startsWith('http')) wsUrl = wsUrl.replace(/^http/, 'ws');
-      if (!wsUrl) return;
-
-      const connect = () => {
-        setSyncStatus('syncing');
-        try {
-          socket = new WebSocket(wsUrl);
-          ws.current = socket;
-          socket.onopen = () => {
-            if (ws.current !== socket) return;
-            setSyncStatus('success');
-            socket.send(JSON.stringify({ type: 'AUTH', username: syncSettings.username, password: syncSettings.password }));
-          };
-          socket.onmessage = (event) => {
-            if (ws.current !== socket) return;
-            try {
-              const msg = JSON.parse(event.data);
-              if (msg.type === 'SYNC_STATE' && msg.data) {
-                isInternalChange.current = true;
-                const remote: ModpackData = msg.data;
-                setCategories(remote.categories);
-                setResources(remote.resources);
-                setRecipes(remote.recipes);
-                setMachines(remote.machines);
-                if (remote.plugins) {
-                    const evaled = remote.plugins.map(p => evaluatePlugin(p.scriptContent)).filter(Boolean) as Plugin[];
-                    setPluginsState(evaled);
-                }
-                setTimeout(() => { isInternalChange.current = false; }, 100);
+      let wsUrl = syncSettings.apiUrl.trim().replace(/^http/, 'ws');
+      try {
+        const socket = new WebSocket(wsUrl);
+        ws.current = socket;
+        socket.onopen = () => {
+          setSyncStatus('success');
+          socket.send(JSON.stringify({ type: 'AUTH', username: syncSettings.username, password: syncSettings.password }));
+        };
+        socket.onmessage = (event) => {
+          try {
+            const msg = JSON.parse(event.data);
+            if (msg.type === 'SYNC_STATE' && msg.data) {
+              isInternalChange.current = true;
+              const remote: ModpackData = msg.data;
+              setCategoriesState(remote.categories);
+              setResourcesState(remote.resources);
+              setRecipesState(remote.recipes);
+              setMachinesState(remote.machines);
+              if (remote.plugins) {
+                setPluginsState(remote.plugins.map(p => evaluatePlugin(p.scriptContent)).filter(Boolean) as Plugin[]);
               }
-            } catch (e) { console.error('WS Error', e); }
-          };
-          socket.onclose = () => { if (ws.current === socket) { setSyncStatus('idle'); ws.current = null; } };
-          socket.onerror = () => { if (ws.current === socket) { setSyncStatus('error'); showNotification('error', 'Connection Failed', 'Could not reach server.'); } };
-        } catch (e) { setSyncStatus('error'); }
-      };
-      connect();
-      return () => { if (socket) socket.close(); };
-    } else {
-      setSyncStatus('idle');
-      if (ws.current) ws.current.close();
+              setTimeout(() => { isInternalChange.current = false; }, 100);
+            }
+          } catch (e) { console.error('WS Sync Error', e); }
+        };
+        socket.onerror = () => { setSyncStatus('error'); };
+        socket.onclose = () => { setSyncStatus('idle'); ws.current = null; };
+        return () => socket.close();
+      } catch (e) { console.error(e); }
     }
   }, [syncSettings.enabled, syncSettings.apiUrl, syncSettings.username, syncSettings.password, showNotification, evaluatePlugin]);
 
