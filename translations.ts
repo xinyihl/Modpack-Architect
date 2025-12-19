@@ -27,6 +27,7 @@ export const translations = {
       uninstall: "Uninstall",
       install: "Install",
       copy: "Copy",
+      download: "Download",
     },
     sidebar: {
       defineRecipe: "Define Recipe",
@@ -51,6 +52,9 @@ export const translations = {
       stepMachine: "1. Machine",
       stepConfig: "2. Configuration",
       selectMachinePrompt: "Select the machine used for this recipe",
+      generateCode: "Generate Scripts",
+      selectProcessor: "Choose a Processor",
+      preview: "Output Preview",
     },
     form: {
       recipeId: "Recipe Identifier",
@@ -93,8 +97,9 @@ export const translations = {
       noFields: "NO CUSTOM FIELDS DEFINED",
       pluginManager: "Plugin Manager",
       installPlugin: "Install Plugin",
-      dropPlugin: "Drop Plugin JS here or click to upload",
+      dropPlugin: "Drop Plugin here or click to upload",
       pluginWarning: "Installing plugins may overwrite existing machines with the same ID.",
+      generateFull: "Export All Scripts",
       sync: {
         title: "Multiplayer Sync",
         enable: "Enable Synchronization",
@@ -135,6 +140,7 @@ export const translations = {
       uninstall: "卸载",
       install: "安装",
       copy: "复制",
+      download: "下载",
     },
     sidebar: {
       defineRecipe: "创建配方",
@@ -159,6 +165,9 @@ export const translations = {
       stepMachine: "1. 选择机器",
       stepConfig: "2. 配置详情",
       selectMachinePrompt: "请选择用于该配方的机器",
+      generateCode: "批量导出脚本",
+      selectProcessor: "选择导出处理器",
+      preview: "生成预览",
     },
     form: {
       recipeId: "配方标识符",
@@ -201,8 +210,9 @@ export const translations = {
       noFields: "尚未定义任何自定义字段",
       pluginManager: "插件管理器",
       installPlugin: "安装插件",
-      dropPlugin: "将插件 JS 文件拖放到此处或点击上传",
-      pluginWarning: "加载插件后会将该插件支持的机器注册到机器列表（已经存在的机器则覆盖，id相同）。卸载插件将仅移除处理器。",
+      dropPlugin: "将插件文件拖放到此处或点击上传",
+      pluginWarning: "加载插件后会将该插件支持的机器注册到机器列表。卸载插件将仅移除处理器。",
+      generateFull: "全量导出脚本",
       sync: {
         title: "多人数据同步",
         enable: "启用自动同步",

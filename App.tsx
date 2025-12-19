@@ -11,7 +11,8 @@ import Sidebar from './components/Sidebar';
 import ResourceDetailPanel from './components/ResourceDetailPanel';
 import RecipeModal from './components/RecipeModal';
 import ResourceLibrary from './components/ResourceLibrary';
-import { Database, Download, Upload, X, Wifi, WifiOff } from 'lucide-react';
+import CodeGeneratorModal from './components/CodeGeneratorModal';
+import { Database, Download, Upload, X, Wifi, WifiOff, FileCode } from 'lucide-react';
 
 // I18n Context
 interface I18nContextType {
@@ -27,7 +28,7 @@ export const useI18n = () => {
 };
 
 function MainLayout() {
-  const { resources, recipes, categories, machines, setCategories, setResources, setRecipes, setMachines, addRecipe, deleteRecipe, addResource, updateResource, deleteResource, addCategory, updateCategory, deleteCategory, addMachine, updateMachine, deleteMachine, syncStatus, syncSettings } = useModpack();
+  const { resources, recipes, categories, machines, setCategories, setResources, setRecipes, setMachines, addRecipe, deleteRecipe, addResource, updateResource, deleteResource, addCategory, updateCategory, deleteCategory, addMachine, updateMachine, deleteMachine, syncStatus, syncSettings, plugins } = useModpack();
   const { t } = useI18n();
   const { theme } = useTheme();
   const { showNotification } = useNotifications();
@@ -37,6 +38,7 @@ function MainLayout() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [isRecipeModalOpen, setIsRecipeModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
   const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -202,6 +204,12 @@ function MainLayout() {
                   <Upload size={16} /> {t('common.import')}
                   <input type="file" onChange={handleImport} accept=".json" className="hidden" />
                 </label>
+                <button 
+                  onClick={() => setIsCodeModalOpen(true)}
+                  className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-500 hover:text-emerald-400 transition-colors"
+                >
+                  <FileCode size={16} /> {t('management.generateFull')}
+                </button>
               </div>
             </div>
 
@@ -225,6 +233,11 @@ function MainLayout() {
           </main>
         </div>
       )}
+
+      <CodeGeneratorModal 
+        isOpen={isCodeModalOpen}
+        onClose={() => setIsCodeModalOpen(false)}
+      />
     </div>
   );
 }
