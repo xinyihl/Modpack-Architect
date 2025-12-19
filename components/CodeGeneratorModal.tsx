@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { X, Code, Clipboard, Check, Download, Puzzle, FileCode } from 'lucide-react';
+import { X, Code, Clipboard, Check, Download, Puzzle, FileCode, Terminal } from 'lucide-react';
 import { useModpack } from '../context/ModpackContext';
 import { useI18n } from '../App';
 import { Recipe, RecipeProcessor, MachineDefinition, Resource, Plugin } from '../types';
@@ -66,12 +66,14 @@ const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({ isOpen, onClose
   }, [selectedPlugin, recipes, machines, resources]);
 
   const handleCopy = () => {
+    if (!generatedCode) return;
     navigator.clipboard.writeText(generatedCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleDownload = () => {
+    if (!generatedCode) return;
     const blob = new Blob([generatedCode], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -154,13 +156,29 @@ const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({ isOpen, onClose
                     </button>
                  </div>
               </div>
-              <div className="flex-1 bg-zinc-950 rounded-3xl border border-zinc-800 overflow-hidden relative group">
-                 <pre className="absolute inset-0 p-8 overflow-auto text-xs text-zinc-400 font-mono leading-relaxed custom-scrollbar whitespace-pre-wrap">
-                    {generatedCode || '// Select a plugin to generate code...'}
-                 </pre>
-                 <div className="absolute top-8 right-8 pointer-events-none opacity-5">
-                    <FileCode size={120} className="text-white" />
-                 </div>
+              <div className="flex-1 bg-zinc-950 rounded-3xl border border-zinc-800 overflow-hidden relative shadow-inner">
+                 {generatedCode ? (
+                   <div className="absolute inset-0 flex flex-col">
+                      <div className="flex items-center gap-2 px-6 py-3 bg-zinc-900 border-b border-zinc-800">
+                        <Terminal size={14} className="text-zinc-500" />
+                        <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Script Output Preview</span>
+                      </div>
+                      <div className="flex-1 overflow-auto custom-scrollbar p-8">
+                        <pre className="text-xs text-zinc-400 font-mono leading-relaxed whitespace-pre-wrap">
+                          {generatedCode}
+                        </pre>
+                      </div>
+                   </div>
+                 ) : (
+                   <div className="absolute inset-0 flex flex-col items-center justify-center opacity-30 gap-4">
+                      <div className="p-8 border-2 border-dashed border-zinc-800 rounded-full">
+                        <FileCode size={48} className="text-zinc-500" />
+                      </div>
+                      <p className="text-xs font-black uppercase tracking-widest text-zinc-500">
+                        {selectedPluginId ? 'Loading preview...' : '// Select a plugin to see preview output'}
+                      </p>
+                   </div>
+                 )}
               </div>
            </div>
         </div>

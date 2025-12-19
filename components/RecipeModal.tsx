@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
-import { X, ChevronRight, Cpu } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { X, ChevronRight, Cpu, Search } from 'lucide-react';
 import { Recipe, Resource, MachineDefinition } from '../types';
 import RecipeForm from './RecipeForm';
 import { useI18n } from '../App';
@@ -19,9 +19,11 @@ const RecipeModal: React.FC<RecipeModalProps> = ({ resources, machines, editingR
   const { t } = useI18n();
   const [step, setStep] = useState<'select-machine' | 'config'>('select-machine');
   const [selectedMachineId, setSelectedMachineId] = useState<string | null>(null);
+  const [machineSearch, setMachineSearch] = useState('');
 
   useEffect(() => {
     if (isOpen) {
+      setMachineSearch('');
       if (editingRecipe) {
         setStep('config');
         setSelectedMachineId(editingRecipe.machineId);
@@ -31,6 +33,13 @@ const RecipeModal: React.FC<RecipeModalProps> = ({ resources, machines, editingR
       }
     }
   }, [isOpen, editingRecipe]);
+
+  const filteredMachines = useMemo(() => {
+    return machines.filter(m => 
+      m.name.toLowerCase().includes(machineSearch.toLowerCase()) || 
+      m.id.toLowerCase().includes(machineSearch.toLowerCase())
+    );
+  }, [machines, machineSearch]);
 
   if (!isOpen) return null;
 
@@ -90,12 +99,21 @@ const RecipeModal: React.FC<RecipeModalProps> = ({ resources, machines, editingR
         </div>
         <div className="flex-1 p-8 overflow-y-auto custom-scrollbar bg-[#0c0c0e]/30">
           {step === 'select-machine' && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-400">
-              <div className="text-center space-y-2">
-                <h3 className="text-zinc-500 font-bold uppercase text-xs tracking-[0.2em]">{t('modal.selectMachinePrompt')}</h3>
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-400">
+              <div className="text-center">
+                <div className="relative max-w-md mx-auto">
+                  <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" />
+                  <input
+                    type="text"
+                    value={machineSearch}
+                    onChange={(e) => setMachineSearch(e.target.value)}
+                    placeholder={t('modal.searchMachinesPlaceholder')}
+                    className="w-full bg-zinc-950/50 border border-zinc-800 rounded-2xl py-3 pl-12 pr-4 text-sm text-white focus:ring-1 focus:ring-blue-500 outline-none h-[52px] font-bold shadow-inner"
+                  />
+                </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
-                {machines.map((machine) => (
+                {filteredMachines.length > 0 ? filteredMachines.map((machine) => (
                   <button 
                     key={machine.id} 
                     onClick={() => handleSelectMachine(machine.id)} 
@@ -115,7 +133,12 @@ const RecipeModal: React.FC<RecipeModalProps> = ({ resources, machines, editingR
                       <p className="text-xs text-zinc-500 font-medium line-clamp-2 mt-1.5 leading-relaxed">{machine.description}</p>
                     </div>
                   </button>
-                ))}
+                )) : (
+                  <div className="col-span-full py-12 text-center text-zinc-600 border border-dashed border-zinc-800 rounded-3xl">
+                    <Cpu size={40} className="mx-auto mb-4 opacity-10" />
+                    <p className="text-sm font-black uppercase tracking-widest">{t('common.noResults')}</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
