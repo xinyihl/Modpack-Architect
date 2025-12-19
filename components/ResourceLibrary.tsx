@@ -26,7 +26,7 @@ const ModalOverlay = ({ children, title, icon: Icon, onClose, maxWidth = "max-w-
     <div className="absolute inset-0 bg-black/70 backdrop-blur-md" onClick={onClose} />
     <div className={`relative w-full ${maxWidth} bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[1.5rem] shadow-2xl flex flex-col max-h-[95vh] overflow-hidden`}>
       <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
-        <h3 className="text-sm font-bold text-zinc-600 dark:text-zinc-300 flex items-center gap-3">
+        <h3 className="text-sm font-bold text-zinc-600 dark:text-zinc-300 flex items-center gap-3 uppercase tracking-widest">
           <Icon size={18} className="text-zinc-400 dark:text-zinc-500" /> {title}
         </h3>
         <button onClick={onClose} className="p-2 text-zinc-400 hover:text-zinc-900 dark:text-zinc-500 dark:hover:text-white transition-colors">
@@ -505,32 +505,36 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
       )}
 
       {activeModal === 'machine' && (
-        <ModalOverlay title={editingMachineId ? t('management.macEdit') : t('management.macTitle')} icon={Cpu} onClose={closeModal} maxWidth="max-w-5xl">
+        <ModalOverlay title={editingMachineId ? t('management.macEdit') : t('management.macTitle')} icon={Cpu} onClose={closeModal} maxWidth="max-w-6xl">
           <form onSubmit={(e) => {
             e.preventDefault();
             const machine = { id: macId || macName.toLowerCase().replace(/\s+/g, '_'), name: macName, description: macDesc, inputs: macInputs, outputs: macOutputs, metadataSchema: macMetadata };
             if (editingMachineId) onUpdateMachine(machine); else onAddMachine(machine);
             closeModal();
-          }} className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          }} className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            
+            {/* Left Column: Basic Info */}
             <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="block text-[11px] text-zinc-400 dark:text-zinc-500 uppercase font-black ml-1 tracking-widest">{t('management.displayName')}</label>
-                  <input type="text" required value={macName} onChange={(e) => setMacName(e.target.value)} placeholder="e.g. Arc Furnace" className="w-full bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-white focus:ring-1 focus:ring-blue-500 outline-none h-[48px] font-bold placeholder:text-zinc-400 dark:placeholder:text-zinc-700" />
+                  <input type="text" required value={macName} onChange={(e) => setMacName(e.target.value)} placeholder="e.g. Arc Furnace" className="w-full bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-white focus:ring-1 focus:ring-blue-500 outline-none h-[48px] font-bold placeholder:text-zinc-400 dark:placeholder:text-zinc-700 shadow-inner" />
                 </div>
                 <div className="space-y-2">
                   <label className="block text-[11px] text-zinc-400 dark:text-zinc-500 uppercase font-black ml-1 tracking-widest">ID</label>
-                  <input type="text" value={macId} onChange={(e) => setMacId(e.target.value)} placeholder="internal_id" className="w-full bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm font-mono text-zinc-900 dark:text-white focus:ring-1 focus:ring-blue-500 outline-none h-[48px] placeholder:text-zinc-400 dark:placeholder:text-zinc-700" />
+                  <input type="text" value={macId} onChange={(e) => setMacId(e.target.value)} placeholder="internal_id" className="w-full bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm font-mono text-zinc-900 dark:text-white focus:ring-1 focus:ring-blue-500 outline-none h-[48px] placeholder:text-zinc-400 dark:placeholder:text-zinc-700 shadow-inner" />
                 </div>
               </div>
               <div className="space-y-2">
                 <label className="block text-[11px] text-zinc-400 dark:text-zinc-500 uppercase font-black ml-1 tracking-widest">{t('common.description')}</label>
-                <textarea value={macDesc} onChange={(e) => setMacDesc(e.target.value)} className="w-full bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-white focus:ring-1 focus:ring-blue-500 outline-none resize-none h-48 font-medium" />
+                <textarea value={macDesc} onChange={(e) => setMacDesc(e.target.value)} className="w-full bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-900 dark:text-white focus:ring-1 focus:ring-blue-500 outline-none resize-none h-[400px] font-medium leading-relaxed shadow-inner" />
               </div>
             </div>
 
-            <div className="space-y-8">
+            {/* Right Column: Configuration */}
+            <div className="space-y-8 flex flex-col">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Inputs */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                       <label className="text-[11px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-widest">{t('form.inputSlots')}</label>
@@ -538,10 +542,10 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
                         <Plus size={10} /> {safeUpperCase(t('form.addSlot'))}
                       </button>
                   </div>
-                  <div className="space-y-3 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                       {macInputs.length > 0 ? (
                         macInputs.map((slot, idx) => (
-                          <div key={idx} className="bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 space-y-3 group hover:border-zinc-300 dark:hover:border-zinc-700/50 transition-all animate-in slide-in-from-bottom-2 duration-200">
+                          <div key={idx} className="bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 space-y-3 group hover:border-zinc-300 dark:hover:border-zinc-700/50 transition-all animate-in slide-in-from-bottom-2 duration-200 shadow-sm">
                               <div className="flex items-center justify-between">
                                   <input 
                                     type="text" 
@@ -558,7 +562,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
                                 <select 
                                   value={slot.type} 
                                   onChange={(e) => updateSlot('input', idx, 'type', e.target.value)} 
-                                  className="flex-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-[10px] font-black uppercase text-zinc-500 dark:text-zinc-400 outline-none focus:ring-1 focus:ring-emerald-500/50 cursor-pointer"
+                                  className="flex-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-[10px] font-black uppercase text-zinc-500 dark:text-zinc-400 outline-none focus:ring-1 focus:ring-emerald-500/50 cursor-pointer h-10 shadow-sm"
                                 >
                                   {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                 </select>
@@ -573,19 +577,20 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
                                     <div className="w-4 h-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-md peer-checked:bg-emerald-500 peer-checked:border-emerald-500 transition-all"></div>
                                     <X size={10} className="absolute inset-0 m-auto text-white opacity-0 peer-checked:opacity-100 scale-0 peer-checked:scale-100 transition-all" />
                                   </div>
-                                  <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-tighter select-none">可选</span>
+                                  <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-tighter select-none">{t('form.optional')}</span>
                                 </label>
                               </div>
                           </div>
                         ))
                       ) : (
-                        <div className="flex items-center justify-center h-[100px] border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
-                          <span className="text-[10px] font-black text-zinc-300 dark:text-zinc-800 uppercase tracking-widest">NO INPUTS</span>
+                        <div className="flex items-center justify-center h-[120px] border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl opacity-40">
+                          <span className="text-[10px] font-black text-zinc-300 dark:text-zinc-800 uppercase tracking-widest">{t('common.noResults')}</span>
                         </div>
                       )}
                   </div>
                 </div>
 
+                {/* Outputs */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                       <label className="text-[11px] font-black text-orange-600 dark:text-orange-500 uppercase tracking-widest">{t('form.outputSlots')}</label>
@@ -593,10 +598,10 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
                         <Plus size={10} /> {safeUpperCase(t('form.addSlot'))}
                       </button>
                   </div>
-                  <div className="space-y-3 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                       {macOutputs.length > 0 ? (
                         macOutputs.map((slot, idx) => (
-                          <div key={idx} className="bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 space-y-3 group hover:border-zinc-300 dark:hover:border-zinc-700/50 transition-all animate-in slide-in-from-bottom-2 duration-200">
+                          <div key={idx} className="bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 space-y-3 group hover:border-zinc-300 dark:hover:border-zinc-700/50 transition-all animate-in slide-in-from-bottom-2 duration-200 shadow-sm">
                               <div className="flex items-center justify-between">
                                   <input 
                                     type="text" 
@@ -613,7 +618,7 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
                                 <select 
                                   value={slot.type} 
                                   onChange={(e) => updateSlot('output', idx, 'type', e.target.value)} 
-                                  className="flex-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-[10px] font-black uppercase text-zinc-500 dark:text-zinc-400 outline-none focus:ring-1 focus:ring-orange-500/50 cursor-pointer"
+                                  className="flex-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-[10px] font-black uppercase text-zinc-500 dark:text-zinc-400 outline-none focus:ring-1 focus:ring-orange-500/50 cursor-pointer h-10 shadow-sm"
                                 >
                                   {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                 </select>
@@ -628,55 +633,56 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
                                     <div className="w-4 h-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-md peer-checked:bg-orange-500 peer-checked:border-orange-500 transition-all"></div>
                                     <X size={10} className="absolute inset-0 m-auto text-white opacity-0 peer-checked:opacity-100 scale-0 peer-checked:scale-100 transition-all" />
                                   </div>
-                                  <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-tighter select-none">可选</span>
+                                  <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-tighter select-none">{t('form.optional')}</span>
                                 </label>
                               </div>
                           </div>
                         ))
                       ) : (
-                        <div className="flex items-center justify-center h-[100px] border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
-                          <span className="text-[10px] font-black text-zinc-300 dark:text-zinc-800 uppercase tracking-widest">NO OUTPUTS</span>
+                        <div className="flex items-center justify-center h-[120px] border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl opacity-40">
+                          <span className="text-[10px] font-black text-zinc-300 dark:text-zinc-800 uppercase tracking-widest">{t('common.noResults')}</span>
                         </div>
                       )}
                   </div>
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800">
+              {/* Metadata Schema Management */}
+              <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800 flex-1">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <Settings2 size={16} className="text-blue-500" />
-                      <label className="text-[11px] font-black text-zinc-500 uppercase tracking-widest">Metadata Schema</label>
+                      <label className="text-[11px] font-black text-zinc-500 uppercase tracking-widest">{t('management.metadataSchema')}</label>
                     </div>
-                    <button type="button" onClick={addMetadataField} className="text-[10px] font-black text-blue-600 dark:text-blue-500 hover:text-blue-400 bg-blue-500/10 px-3 py-1.5 rounded-full border border-blue-500/20 transition-all flex items-center gap-1">
-                      <Plus size={10} /> ADD FIELD
+                    <button type="button" onClick={addMetadataField} className="text-[10px] font-black text-blue-600 dark:text-blue-500 hover:text-blue-400 bg-blue-500/10 px-3 py-1.5 rounded-full border border-blue-500/20 transition-all flex items-center gap-1 shadow-sm">
+                      <Plus size={10} /> {t('management.addField')}
                     </button>
                   </div>
-                  <div className="space-y-3 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="space-y-3 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
                     {macMetadata.length > 0 ? (
                       macMetadata.map((field, idx) => (
-                        <div key={idx} className="bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 flex flex-col sm:flex-row gap-4 group">
+                        <div key={idx} className="bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 flex flex-col sm:flex-row gap-4 group shadow-sm transition-all hover:border-zinc-300 dark:hover:border-zinc-700">
                           <div className="flex-1 space-y-2">
                              <input 
                                 type="text" 
                                 value={field.label} 
                                 onChange={(e) => updateMetadataField(idx, 'label', e.target.value)} 
-                                placeholder="Display Label (e.g. Success Chance)" 
-                                className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-zinc-800 dark:text-zinc-200 outline-none focus:ring-1 focus:ring-blue-500 font-bold"
+                                placeholder={t('management.fieldLabel')} 
+                                className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-zinc-800 dark:text-zinc-200 outline-none focus:ring-1 focus:ring-blue-500 font-bold shadow-sm"
                              />
                              <input 
                                 type="text" 
                                 value={field.key} 
                                 onChange={(e) => updateMetadataField(idx, 'key', e.target.value)} 
-                                placeholder="Key (e.g. chance)" 
-                                className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-1.5 text-[10px] font-mono text-zinc-500 outline-none focus:ring-1 focus:ring-blue-500"
+                                placeholder={t('management.fieldKey')} 
+                                className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-1.5 text-[10px] font-mono text-zinc-500 outline-none focus:ring-1 focus:ring-blue-500 shadow-sm"
                              />
                           </div>
                           <div className="flex items-center gap-3">
                             <select 
                               value={field.type} 
                               onChange={(e) => updateMetadataField(idx, 'type', e.target.value as MetadataFieldType)} 
-                              className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-[10px] font-black uppercase text-zinc-500 outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer h-[38px] min-w-[100px]"
+                              className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-[10px] font-black uppercase text-zinc-500 outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer h-[38px] min-w-[100px] shadow-sm"
                             >
                               <option value="string">String</option>
                               <option value="number">Number</option>
@@ -690,16 +696,17 @@ const ResourceLibrary: React.FC<ResourceLibraryProps> = ({
                         </div>
                       ))
                     ) : (
-                      <div className="flex items-center justify-center h-[60px] border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
-                        <span className="text-[10px] font-black text-zinc-300 dark:text-zinc-800 uppercase tracking-widest">NO CUSTOM FIELDS</span>
+                      <div className="flex items-center justify-center h-[80px] border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl opacity-40">
+                        <span className="text-[10px] font-black text-zinc-300 dark:text-zinc-800 uppercase tracking-widest">{t('management.noFields')}</span>
                       </div>
                     )}
                   </div>
               </div>
             </div>
 
+            {/* Footer: Full-width Submit */}
             <div className="lg:col-span-2 mt-4 pt-6 border-t border-zinc-100 dark:border-zinc-800">
-              <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl transition-all font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-blue-600/20 active:scale-[0.98]">
+              <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl transition-all font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-blue-600/20 active:scale-[0.98]">
                 {editingMachineId ? t('common.update') : t('common.create')}
               </button>
             </div>
