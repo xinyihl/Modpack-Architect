@@ -1,4 +1,3 @@
-
 export type ResourceType = string;
 
 export interface ResourceCategory {
@@ -17,7 +16,7 @@ export interface Resource {
 
 export interface ResourceStack {
   resourceId: string;
-  amount: number;
+  amount: number;  
 }
 
 export interface MachineSlot {
