@@ -4,6 +4,7 @@ import { Resource, Recipe, ResourceCategory, MachineDefinition, SyncSettings, Sy
 import { INITIAL_MACHINES } from '../constants/machines';
 import { useNotifications } from './NotificationContext';
 import { getAllFromStore, saveToStore, deleteFromStore, clearStore } from '../utils/db';
+import { translations } from '../translations';
 
 interface ModpackContextType {
   categories: ResourceCategory[];
@@ -58,6 +59,12 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
   const [isInitialized, setIsInitialized] = useState(false);
 
+  // Helper to get localized text manually for context
+  const getLocale = useCallback(() => {
+     // Default to zh-CN if can't find. Simplified for this app.
+     return (document.documentElement.lang || 'zh-CN') as 'en-US' | 'zh-CN';
+  }, []);
+
   const [syncSettings, setSyncSettings] = useState<SyncSettings>(() => {
     const saved = localStorage.getItem('sync_settings');
     return saved ? JSON.parse(saved) : {
@@ -75,7 +82,6 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Helper to evaluate plugin script safely
   const evaluatePlugin = useCallback((script: string): Plugin | null => {
     try {
-      // The script is expected to return a Plugin object
       const factory = new Function(script);
       const result = factory();
       if (result && result.id && result.name && Array.isArray(result.machines) && Array.isArray(result.processors)) {
@@ -111,7 +117,6 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
         if (dbRecs.length > 0) setRecipesState(dbRecs);
 
-        // Runtime evaluation of stored scripts
         const evaluatedPlugins: Plugin[] = [];
         dbPlugins.forEach(p => {
           const evaled = evaluatePlugin(p.scriptContent);
@@ -184,12 +189,25 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return next;
   });
 
-  const deleteResource = (id: string) => setResourcesState(prev => {
-    const next = prev.filter(r => r.id !== id);
-    deleteFromStore('resources', id);
-    wrapUpdate({ categories, resources: next, recipes, machines, plugins });
-    return next;
-  });
+  const deleteResource = (id: string) => {
+    const usedInRecipes = recipes.filter(r => 
+      r.inputs.some(i => i.resourceId === id) || 
+      r.outputs.some(o => o.resourceId === id)
+    );
+
+    if (usedInRecipes.length > 0) {
+      const msg = translations[getLocale()].management.errors.resourceUsed.replace('{count}', String(usedInRecipes.length));
+      showNotification('error', 'Action Blocked', msg);
+      return;
+    }
+
+    setResourcesState(prev => {
+      const next = prev.filter(r => r.id !== id);
+      deleteFromStore('resources', id);
+      wrapUpdate({ categories, resources: next, recipes, machines, plugins });
+      return next;
+    });
+  };
 
   const addRecipe = (recipe: Recipe) => setRecipesState(prev => {
     const idx = prev.findIndex(r => r.id === recipe.id);
@@ -220,12 +238,27 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return next;
   });
 
-  const deleteCategory = (id: string) => setCategoriesState(prev => {
-    const next = prev.filter(c => c.id !== id);
-    deleteFromStore('categories', id);
-    wrapUpdate({ categories: next, resources, recipes, machines, plugins });
-    return next;
-  });
+  const deleteCategory = (id: string) => {
+    const resourcesUsing = resources.filter(r => r.type === id);
+    const machinesUsing = machines.filter(m => 
+      m.inputs.some(i => i.type === id) || 
+      m.outputs.some(o => o.type === id)
+    );
+
+    if (resourcesUsing.length > 0 || machinesUsing.length > 0) {
+      const count = resourcesUsing.length + machinesUsing.length;
+      const msg = translations[getLocale()].management.errors.categoryUsed.replace('{count}', String(count));
+      showNotification('error', 'Action Blocked', msg);
+      return;
+    }
+
+    setCategoriesState(prev => {
+      const next = prev.filter(c => c.id !== id);
+      deleteFromStore('categories', id);
+      wrapUpdate({ categories: next, resources, recipes, machines, plugins });
+      return next;
+    });
+  };
 
   const addMachine = (m: MachineDefinition) => setMachinesState(prev => {
     const next = [...prev, m];
@@ -241,12 +274,22 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return next;
   });
 
-  const deleteMachine = (id: string) => setMachinesState(prev => {
-    const next = prev.filter(m => m.id !== id);
-    deleteFromStore('machines', id);
-    wrapUpdate({ categories, resources, recipes, machines: next, plugins });
-    return next;
-  });
+  const deleteMachine = (id: string) => {
+    const recipesUsing = recipes.filter(r => r.machineId === id);
+    
+    if (recipesUsing.length > 0) {
+      const msg = translations[getLocale()].management.errors.machineUsed.replace('{count}', String(recipesUsing.length));
+      showNotification('error', 'Action Blocked', msg);
+      return;
+    }
+
+    setMachinesState(prev => {
+      const next = prev.filter(m => m.id !== id);
+      deleteFromStore('machines', id);
+      wrapUpdate({ categories, resources, recipes, machines: next, plugins });
+      return next;
+    });
+  };
 
   // Plugin System logic
   const addPlugin = (script: string) => {
@@ -256,10 +299,8 @@ export const ModpackProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setPluginsState(prev => {
       const filtered = prev.filter(p => p.id !== plugin.id);
       const next = [...filtered, plugin];
-      // Save minimal version (just the script) to IndexedDB
       saveToStore('plugins', { id: plugin.id, scriptContent: script });
 
-      // Register machines
       setMachinesState(mPrev => {
         const mNext = [...mPrev];
         plugin.machines.forEach(pm => {

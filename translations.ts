@@ -110,6 +110,11 @@ export const translations = {
         status: "Status",
         lastSync: "Last Sync",
         trigger: "Sync Now"
+      },
+      errors: {
+        resourceUsed: "Cannot delete resource. It is used in {count} recipes.",
+        categoryUsed: "Cannot delete category. It is used by {count} resources or machine slots.",
+        machineUsed: "Cannot delete machine. It is used in {count} recipes."
       }
     }
   },
@@ -223,6 +228,11 @@ export const translations = {
         status: "同步状态",
         lastSync: "上次同步",
         trigger: "立即同步"
+      },
+      errors: {
+        resourceUsed: "无法删除资源。它正被 {count} 个配方使用。",
+        categoryUsed: "无法删除分类。它正被 {count} 个资源或机器槽位引用。",
+        machineUsed: "无法删除机器。它正被 {count} 个配方引用。"
       }
     }
   }

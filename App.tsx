@@ -29,7 +29,7 @@ export const useI18n = () => {
 
 function MainLayout() {
   const { resources, recipes, categories, machines, setCategories, setResources, setRecipes, setMachines, addRecipe, deleteRecipe, addResource, updateResource, deleteResource, addCategory, updateCategory, deleteCategory, addMachine, updateMachine, deleteMachine, syncStatus, syncSettings, plugins } = useModpack();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { theme } = useTheme();
   const { showNotification } = useNotifications();
   
@@ -46,6 +46,11 @@ function MainLayout() {
     setNodes(layoutNodes);
     setEdges(layoutEdges);
   }, [resources, recipes, setNodes, setEdges]);
+
+  // Sync locale to HTML lang for Context usage
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
 
   const handleEditRecipe = (id: string) => {
     setEditingRecipeId(id);
