@@ -1,8 +1,8 @@
 
-import { ModpackData, Resource, Recipe, ResourceCategory, MachineDefinition } from '../types';
+import { ModpackData, Resource, Recipe, ResourceCategory, MachineDefinition, Plugin } from '../types';
 
 const DB_NAME = 'ModpackArchitectDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Incremented version
 
 export const openDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
@@ -14,6 +14,7 @@ export const openDB = (): Promise<IDBDatabase> => {
       if (!db.objectStoreNames.contains('resources')) db.createObjectStore('resources', { keyPath: 'id' });
       if (!db.objectStoreNames.contains('recipes')) db.createObjectStore('recipes', { keyPath: 'id' });
       if (!db.objectStoreNames.contains('machines')) db.createObjectStore('machines', { keyPath: 'id' });
+      if (!db.objectStoreNames.contains('plugins')) db.createObjectStore('plugins', { keyPath: 'id' });
     };
 
     request.onsuccess = () => resolve(request.result);

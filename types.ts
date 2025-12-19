@@ -65,9 +65,29 @@ export interface SyncSettings {
 
 export type SyncStatus = 'idle' | 'syncing' | 'error' | 'success';
 
+export interface RecipeProcessor {
+  id: string;
+  name: string;
+  description: string;
+  template?: string; // Fallback template string
+  handler?: (recipe: Recipe, machine: MachineDefinition, resources: Resource[]) => string;
+}
+
+export interface Plugin {
+  id: string;
+  name: string;
+  description: string;
+  author?: string;
+  version: string;
+  scriptContent: string; // The raw JS code
+  machines: MachineDefinition[];
+  processors: RecipeProcessor[];
+}
+
 export interface ModpackData {
   categories: ResourceCategory[];
   resources: Resource[];
   recipes: Recipe[];
   machines: MachineDefinition[];
+  plugins?: Plugin[];
 }

@@ -24,6 +24,9 @@ export const translations = {
       import: "Import",
       export: "Export",
       resultsFound: "{count} Found",
+      uninstall: "Uninstall",
+      install: "Install",
+      copy: "Copy",
     },
     sidebar: {
       defineRecipe: "Define Recipe",
@@ -40,6 +43,7 @@ export const translations = {
       producedBy: "Produced By",
       usedIn: "Used In",
       resourceDetail: "Resource Detail",
+      generatedScripts: "Generated Scripts",
     },
     modal: {
       newRecipe: "New Recipe Definition",
@@ -69,7 +73,8 @@ export const translations = {
         resources: "Resources",
         categories: "Categories",
         machines: "Machines",
-        collaboration: "Collaboration"
+        collaboration: "Collaboration",
+        plugins: "Plugins"
       },
       resTitle: "Register New Resource",
       resEdit: "Edit Resource",
@@ -86,6 +91,10 @@ export const translations = {
       fieldLabel: "Display Label (e.g. Success Chance)",
       fieldKey: "Key (e.g. chance)",
       noFields: "NO CUSTOM FIELDS DEFINED",
+      pluginManager: "Plugin Manager",
+      installPlugin: "Install Plugin",
+      dropPlugin: "Drop Plugin JS here or click to upload",
+      pluginWarning: "Installing plugins may overwrite existing machines with the same ID.",
       sync: {
         title: "Multiplayer Sync",
         enable: "Enable Synchronization",
@@ -123,6 +132,9 @@ export const translations = {
       import: "导入",
       export: "导出",
       resultsFound: "找到 {count} 个项",
+      uninstall: "卸载",
+      install: "安装",
+      copy: "复制",
     },
     sidebar: {
       defineRecipe: "创建配方",
@@ -139,6 +151,7 @@ export const translations = {
       producedBy: "产出自",
       usedIn: "用于",
       resourceDetail: "资源详情",
+      generatedScripts: "生成脚本预览",
     },
     modal: {
       newRecipe: "定义新配方",
@@ -168,7 +181,8 @@ export const translations = {
         resources: "资源管理",
         categories: "分类管理",
         machines: "机器管理",
-        collaboration: "团队协作"
+        collaboration: "团队协作",
+        plugins: "插件系统"
       },
       resTitle: "注册新资源",
       resEdit: "编辑资源",
@@ -185,6 +199,10 @@ export const translations = {
       fieldLabel: "显示标签 (如: 成功几率)",
       fieldKey: "内部键名 (如: chance)",
       noFields: "尚未定义任何自定义字段",
+      pluginManager: "插件管理器",
+      installPlugin: "安装插件",
+      dropPlugin: "将插件 JS 文件拖放到此处或点击上传",
+      pluginWarning: "加载插件后会将该插件支持的机器注册到机器列表（已经存在的机器则覆盖，id相同）。卸载插件将仅移除处理器。",
       sync: {
         title: "多人数据同步",
         enable: "启用自动同步",
