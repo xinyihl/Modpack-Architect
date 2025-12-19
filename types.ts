@@ -69,6 +69,7 @@ export interface RecipeProcessor {
   id: string;
   name: string;
   description: string;
+  machineId: string; // The specific machine this processor targets
   template?: string; // Fallback template string
   handler?: (recipe: Recipe, machine: MachineDefinition, resources: Resource[]) => string;
 }
