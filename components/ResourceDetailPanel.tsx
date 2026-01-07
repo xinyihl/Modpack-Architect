@@ -1,8 +1,7 @@
 import React, { useMemo } from 'react';
 import { useModpack } from '../context/ModpackContext';
 import { useI18n } from '../context/I18nContext';
-import { Resource, Recipe, RecipeProcessor } from '../types';
-import { Clipboard, Check } from 'lucide-react';
+import { Resource, Recipe } from '../types';
 
 interface ResourceDetailPanelProps {
   resourceId: string;
@@ -10,9 +9,8 @@ interface ResourceDetailPanelProps {
 }
 
 const ResourceDetailPanel: React.FC<ResourceDetailPanelProps> = ({ resourceId, onEditRecipe }) => {
-  const { resources, recipes, machines, categories, plugins } = useModpack();
+  const { resources, recipes, machines, categories } = useModpack();
   const { t } = useI18n();
-  const [copiedId, setCopiedId] = React.useState<string | null>(null);
 
   const selectedResource = resources.find(r => r.id === resourceId);
   
@@ -23,46 +21,6 @@ const ResourceDetailPanel: React.FC<ResourceDetailPanelProps> = ({ resourceId, o
       asOutput: recipes.filter(r => r.outputs.some(o => o.resourceId === resourceId)),
     };
   }, [recipes, resourceId]);
-
-  const activeProcessors = useMemo(() => {
-    return plugins.flatMap(p => p.processors);
-  }, [plugins]);
-
-  const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
-
-  const processRecipe = (recipe: Recipe, processor: RecipeProcessor): string => {
-    const machine = machines.find(m => m.id === recipe.machineId);
-    if (!machine) return "// Error: Machine not found";
-
-    if (processor.handler && typeof processor.handler === 'function') {
-        try {
-            return processor.handler(recipe, machine, resources);
-        } catch (e) {
-            return `// Processor Error: ${e instanceof Error ? e.message : 'Unknown script error'}`;
-        }
-    }
-
-    let output = processor.template || "";
-    const inputNames = recipe.inputs.map(i => `"${resources.find(r => r.id === i.resourceId)?.name || i.resourceId}"`).join(', ');
-    const outputNames = recipe.outputs.map(o => `"${resources.find(r => r.id === o.resourceId)?.name || o.resourceId}"`).join(', ');
-    const inputIds = recipe.inputs.map(i => `"${i.resourceId}"`).join(', ');
-    const outputIds = recipe.outputs.map(o => `"${o.resourceId}"`).join(', ');
-
-    output = output.replace(/\{\{machine\}\}/g, machine.id);
-    output = output.replace(/\{\{machine_name\}\}/g, machine.name);
-    output = output.replace(/\{\{recipe_name\}\}/g, recipe.name);
-    output = output.replace(/\{\{duration\}\}/g, String(recipe.duration || 100));
-    output = output.replace(/\{\{inputs\}\}/g, `[${inputNames}]`);
-    output = output.replace(/\{\{outputs\}\}/g, `[${outputNames}]`);
-    output = output.replace(/\{\{input_ids\}\}/g, `[${inputIds}]`);
-    output = output.replace(/\{\{output_ids\}\}/g, `[${outputIds}]`);
-
-    return output;
-  };
 
   if (!selectedResource) return null;
 
@@ -82,23 +40,6 @@ const ResourceDetailPanel: React.FC<ResourceDetailPanelProps> = ({ resourceId, o
             <div className="flex items-center gap-2 overflow-hidden"><span className="shrink-0 text-orange-600 dark:text-orange-500/80 font-bold uppercase tracking-tighter">OUT:</span><span className="truncate opacity-80">{recipe.outputs.map(o => `${o.amount}x ${getResName(o.resourceId)}`).join(', ')}</span></div>
           </div>
         </div>
-        {activeProcessors.length > 0 && (
-          <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800/50 space-y-3">
-             <div className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">{t('panel.generatedScripts')}</div>
-             <div className="space-y-2">
-               {activeProcessors.map(proc => {
-                 const generated = processRecipe(recipe, proc);
-                 return (
-                   <div key={proc.id} className="relative group/code">
-                      <pre className="bg-zinc-950 text-[10px] text-zinc-300 p-3 rounded-lg overflow-x-auto font-mono leading-relaxed border border-zinc-800 whitespace-pre-wrap">{generated}</pre>
-                      <button onClick={() => copyToClipboard(generated, `${recipe.id}-${proc.id}`)} className="absolute top-2 right-2 p-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 rounded-md transition-all opacity-0 group-hover/code:opacity-100" title={t('common.copy')}>{copiedId === `${recipe.id}-${proc.id}` ? <Check size={12} className="text-emerald-500" /> : <Clipboard size={12} />}</button>
-                      <div className="absolute bottom-2 left-3 text-[8px] font-black text-zinc-600 uppercase tracking-tighter pointer-events-none">{proc.name}</div>
-                   </div>
-                 );
-               })}
-             </div>
-          </div>
-        )}
       </div>
     );
   };
